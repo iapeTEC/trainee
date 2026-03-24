@@ -155,7 +155,7 @@
                 </div>
                 <div><div class="photo-slot">${st.photo_url ? `<img src="${window.UI.escapeHtml(st.photo_url)}">` : ''}</div></div>
               </div>
-              <div style="margin-top:10mm;">
+              <div class="report-section report-section-metrics">
                 <div class="section-title">Ocorrências</div>
                 <div class="metric-grid">
                   ${cell('FREQUÊNCIA', mt.FREQUENCIA)}
@@ -164,7 +164,7 @@
                   ${cell('RENDIMENTO', mt.RENDIMENTO)}
                 </div>
               </div>
-              <div style="margin-top:16mm;">
+              <div class="report-section report-section-notes">
                 <div class="section-title">Observações:</div>
                 <div class="notes-box">${window.UI.escapeHtml(st.notes || '')}</div>
               </div>
