@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chamada • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Chamada</h1>
+        <div class="small-muted">Modelo fluido por turma, com presença padrão e falta marcada manualmente.</div>
+      </div>
+      <div class="actions screen-only">
+        <button class="btn btn-primary" type="button" id="btnSalvarChamadaTop">Salvar chamada</button>
+      </div>
+    </div>
+
+    <div class="card attendance-shell">
+      <div class="attendance-header">
+        <div>
+          <div class="attendance-title">Turmas</div>
+          <div class="small-muted">Escolha a turma e lance a chamada do dia.</div>
+        </div>
+        <div class="attendance-toolbar">
+          <label>
+            <span>Data</span>
+            <input type="date" id="attendanceDate">
+          </label>
+          <button class="btn btn-secondary" type="button" id="btnReloadRoster">Recarregar</button>
+        </div>
+      </div>
+
+      <div id="attendanceTabs" class="attendance-tabs"></div>
+
+      <div class="attendance-list-card">
+        <div class="attendance-list-head">
+          <div>
+            <h2 id="attendanceClassTitle">—</h2>
+            <div class="small-muted" id="attendanceClassMeta">—</div>
+          </div>
+          <div class="attendance-counters">
+            <div class="counter-pill"><span id="countPresent">0</span> presentes</div>
+            <div class="counter-pill alt"><span id="countAbsent">0</span> faltas</div>
+          </div>
+        </div>
+
+        <div id="attendanceList" class="attendance-list"></div>
+
+        <div class="attendance-footer-actions">
+          <button class="btn btn-primary" type="button" id="btnSalvarChamadaBottom">Salvar chamada</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      window.UI.requireAuth(['EDITOR']);
+      window.UI.mountNav('attendance');
+
+      const COURSE_OPTIONS = ['ADM 01', 'ADM 02', 'WEB 01', 'WEB 02'];
+      let currentCourse = 'ADM 01';
+      let currentRoster = [];
+
+      function isoToday() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function photoOrDefault(url) {
+        const raw = String(url || '').trim();
+        if (raw) return raw;
+        return (window.APP_CONFIG && window.APP_CONFIG.DEFAULT_PHOTO) || '';
+      }
+
+      function updateCounters() {
+        const checks = Array.from(document.querySelectorAll('.att-presence-toggle input[type="checkbox"]'));
+        const present = checks.filter(x => x.checked).length;
+        document.getElementById('countPresent').textContent = String(present);
+        document.getElementById('countAbsent').textContent = String(checks.length - present);
+      }
+
+      function bindCounters() {
+        document.querySelectorAll('.att-presence-toggle input[type="checkbox"]').forEach(input => {
+          input.addEventListener('change', updateCounters);
+        });
+      }
+
+      function renderTabs() {
+        const host = document.getElementById('attendanceTabs');
+        host.innerHTML = COURSE_OPTIONS.map(course => `
+          <button type="button" class="attendance-tab ${course === currentCourse ? 'active' : ''}" data-course="${course}">${course}</button>
+        `).join('');
+        host.querySelectorAll('.attendance-tab').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            currentCourse = btn.dataset.course || 'ADM 01';
+            renderTabs();
+            await loadRoster();
+          });
+        });
+      }
+
+      function renderRoster() {
+        document.getElementById('attendanceClassTitle').textContent = currentCourse;
+        document.getElementById('attendanceClassMeta').textContent = `${currentRoster.length} aluno(s) encontrados nesta turma`;
+
+        const list = document.getElementById('attendanceList');
+        if (!currentRoster.length) {
+          list.innerHTML = '<div class="attendance-empty">Nenhum aluno ativo encontrado nessa turma.</div>';
+          updateCounters();
+          return;
+        }
+
+        list.innerHTML = currentRoster.map(student => {
+          const photo = photoOrDefault(student.photo_url);
+          const avatar = photo
+            ? `<div class="attendance-avatar"><img src="${window.UI.escapeHtml(photo)}" alt=""></div>`
+            : `<div class="attendance-avatar empty"></div>`;
+          return `
+            <div class="attendance-row" data-student-id="${window.UI.escapeHtml(student.student_id)}">
+              <div class="attendance-main">
+                <div class="attendance-left">
+                  ${avatar}
+                  <div>
+                    <div class="attendance-name">${window.UI.escapeHtml(student.name || '')}</div>
+                    <div class="attendance-sub">${window.UI.escapeHtml(student.course_name || '')} • Turma ${window.UI.escapeHtml(student.class_name || '')}</div>
+                  </div>
+                </div>
+                <div class="attendance-actions">
+                  <button type="button" class="att-obs-toggle">OBS</button>
+                  <label class="att-presence-toggle" title="Presença">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="attendance-obs-box">
+                <textarea placeholder="Observação opcional sobre o aluno..."></textarea>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        list.querySelectorAll('.att-obs-toggle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const row = btn.closest('.attendance-row');
+            btn.classList.toggle('active');
+            row.querySelector('.attendance-obs-box').classList.toggle('active');
+          });
+        });
+
+        bindCounters();
+        updateCounters();
+      }
+
+      async function loadRoster() {
+        const data = await window.Api.apiPost('getAttendanceRoster', { course_name: currentCourse });
+        currentRoster = data.students || [];
+        renderRoster();
+      }
+
+      function collectAttendance() {
+        return Array.from(document.querySelectorAll('.attendance-row')).map(row => {
+          const name = row.querySelector('.attendance-name').textContent.trim();
+          const present = row.querySelector('.att-presence-toggle input').checked ? 1 : 0;
+          const observation = (row.querySelector('.attendance-obs-box textarea').value || '').trim();
+          return {
+            name,
+            present,
+            observation,
+            obs_enabled: observation ? 1 : 0
+          };
+        });
+      }
+
+      async function saveAttendance() {
+        const students = collectAttendance();
+        if (!students.length) {
+          window.UI.toast('Nenhum aluno encontrado nessa turma.', 'err');
+          return;
+        }
+        const date = document.getElementById('attendanceDate').value || isoToday();
+        await window.Api.apiPost('saveAttendance', {
+          course_name: currentCourse,
+          date,
+          students
+        });
+        window.UI.toast(`Chamada de ${currentCourse} salva em ${window.Api.fmtDate(date)}.`);
+      }
+
+      async function init() {
+        document.getElementById('attendanceDate').value = isoToday();
+        renderTabs();
+        await loadRoster();
+        document.getElementById('btnReloadRoster').addEventListener('click', loadRoster);
+        document.getElementById('btnSalvarChamadaTop').addEventListener('click', saveAttendance);
+        document.getElementById('btnSalvarChamadaBottom').addEventListener('click', saveAttendance);
+      }
+
+      init().catch(err => {
+        console.error(err);
+        window.UI.toast(err.message || String(err), 'err');
+      });
+    })();
+  </script>
+</body>
+</html>
