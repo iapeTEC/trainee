@@ -49,6 +49,7 @@ window.UI = (() => {
     const links = [
       ['index.html', 'Início', 'home'],
       ['students.html', 'Alunos', 'students'],
+      ['attendance.html', 'Chamada', 'attendance'],
       ['reports.html', 'Relatórios', 'reports'],
       ['absences.html', 'Faltas', 'absences'],
       ['ranking.html', 'Ranking', 'ranking']

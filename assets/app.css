@@ -155,3 +155,56 @@ tbody tr:hover{background:#fafafa}
   .metric-grid{grid-template-columns:1fr}
 }
 
+
+.attendance-shell{padding:20px}
+.attendance-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.attendance-title{font-size:1.05rem;font-weight:800;color:#1f2937;margin-bottom:4px}
+.attendance-toolbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.attendance-toolbar label{display:flex;flex-direction:column;gap:6px;font-size:.9rem;color:#475467}
+.attendance-toolbar input[type="date"]{height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:var(--txt)}
+.attendance-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.attendance-tab{height:46px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-weight:800;color:#344054;cursor:pointer;transition:.18s ease}
+.attendance-tab:hover{transform:translateY(-1px);border-color:#98a2b3}
+.attendance-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.attendance-list-card{border:1px solid var(--line);border-radius:20px;background:#fbfcfe;overflow:hidden}
+.attendance-list-head{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:18px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:#fff}
+.attendance-list-head h2{margin:0 0 4px;font-size:1.2rem}
+.attendance-counters{display:flex;gap:8px;flex-wrap:wrap}
+.counter-pill{padding:8px 12px;border-radius:999px;background:#e7f8ef;color:#166534;font-weight:700;font-size:.92rem}
+.counter-pill.alt{background:#fff1f2;color:#b42318}
+.attendance-list{display:flex;flex-direction:column}
+.attendance-row{padding:14px 16px;border-top:1px solid #edf1f5;background:#fbfcfe}
+.attendance-row:nth-child(even){background:#f6f8fb}
+.attendance-main{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.attendance-left{display:flex;align-items:center;gap:12px;min-width:0}
+.attendance-avatar{width:46px;height:46px;border-radius:50%;background:#dde3ea;border:1px solid #d0d7de;overflow:hidden;flex:0 0 46px}
+.attendance-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.attendance-avatar.empty::after{content:'';display:block;width:100%;height:100%;background:linear-gradient(180deg,#edf2f7,#dbe3ea)}
+.attendance-name{font-weight:800;color:#101828;line-height:1.2}
+.attendance-sub{font-size:.86rem;color:#667085;margin-top:3px}
+.attendance-actions{display:flex;align-items:center;gap:10px}
+.att-obs-toggle{min-width:62px;height:34px;padding:0 12px;border:none;border-radius:999px;background:#98a2b3;color:#fff;font-weight:800;cursor:pointer;transition:.18s ease}
+.att-obs-toggle.active{background:#76bfd1;color:#062b36}
+.att-presence-toggle{position:relative;display:inline-block;width:54px;height:30px}
+.att-presence-toggle input{opacity:0;width:0;height:0}
+.att-presence-toggle .slider{position:absolute;inset:0;border-radius:999px;background:#ef4444;transition:.2s ease;cursor:pointer}
+.att-presence-toggle .slider:before{content:'0';position:absolute;left:4px;top:4px;width:22px;height:22px;border-radius:50%;background:#fff;color:#111827;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:.2s ease}
+.att-presence-toggle input:checked + .slider{background:#22c55e}
+.att-presence-toggle input:checked + .slider:before{transform:translateX(24px);content:'1'}
+.attendance-obs-box{display:none;margin-top:10px;padding-left:58px}
+.attendance-obs-box.active{display:block}
+.attendance-obs-box textarea{width:100%;min-height:72px;resize:vertical;border:1px solid #b7d7e0;border-radius:14px;padding:12px;background:#fff;color:var(--txt);font:inherit}
+.attendance-footer-actions{padding:16px;border-top:1px solid var(--line);background:#fff;display:flex;justify-content:flex-end}
+.attendance-empty{padding:22px 18px;color:#667085}
+
+@media (max-width: 900px){
+  .attendance-tabs{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 640px){
+  .attendance-shell{padding:14px}
+  .attendance-tabs{grid-template-columns:1fr}
+  .attendance-main{align-items:flex-start}
+  .attendance-actions{align-self:center}
+  .attendance-obs-box{padding-left:0}
+  .attendance-footer-actions .btn,.attendance-toolbar .btn,.screen-only .btn{width:100%}
+}
