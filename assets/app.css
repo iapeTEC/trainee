@@ -64,64 +64,94 @@ tbody tr:hover{background:#fafafa}
 .score-inline .pct{width:62px;text-align:right;font-weight:800}
 .history-list{display:flex;flex-direction:column;gap:10px}
 .history-item{display:grid;grid-template-columns:120px 1fr 90px 110px;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;align-items:center}
-.metric-box{position:relative;height:52px;border:1px solid #99a8ff;background:#fff;overflow:hidden}
-.metric-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--teal),#5876ff)}
-.metric-value{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
-.metric-head{background:#cfd5ff;padding:14px 8px;text-align:center;font-size:.95rem;font-weight:800;border-bottom:1px solid #99a8ff}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #99a8ff}
-.metric-cell{border-right:1px solid #99a8ff}
-.metric-cell:last-child{border-right:none}
+
+.metric-box{position:relative;height:16mm;border:1px solid #d8e0ea;background:#f4f7fb;overflow:hidden;border-radius:999px}
+.metric-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#74c5cf,#5f8dff);border-radius:999px}
+.metric-value{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.98rem;color:#182230;letter-spacing:.01em}
+.metric-head{padding:0 0 3mm;text-align:left;font-size:.92rem;font-weight:800;letter-spacing:.04em;color:#344054;background:transparent;border:none}
+.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4mm;border:none}
+.metric-cell{border:1px solid #e2e8f0;border-radius:16px;padding:4mm;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+.metric-cell:last-child{border-right:1px solid #e2e8f0}
 .small-box{height:40px}
-.pdf-page{width:210mm;min-height:297mm;margin:0 auto;background:#f3f3f3;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.08)}
-.pdf-hero{background:var(--navy);height:68mm;position:relative;color:#fff;overflow:hidden}
-.blob{position:absolute;background:var(--teal);border-radius:999px}
-.blob.a{left:-20mm;top:-13mm;width:92mm;height:34mm}
-.blob.b{right:-18mm;top:22mm;width:86mm;height:28mm}
-.blob.c{left:-12mm;bottom:-14mm;width:80mm;height:28mm}
-.pdf-logo{position:absolute;left:11mm;top:8mm;width:50mm;height:24mm;display:flex;align-items:center;justify-content:center}
+.pdf-page{width:210mm;min-height:297mm;margin:0 auto;background:#ffffff;position:relative;overflow:hidden;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
+.pdf-hero{background:var(--navy);height:39mm;position:relative;color:#fff;overflow:hidden;border-bottom-left-radius:30px;border-bottom-right-radius:30px}
+.blob{position:absolute;background:rgba(116,197,207,.22);border-radius:999px}
+.blob.a{left:-18mm;top:-12mm;width:62mm;height:24mm}
+.blob.b{right:-16mm;top:8mm;width:56mm;height:20mm}
+.blob.c{left:58mm;bottom:-14mm;width:48mm;height:18mm}
+.pdf-logo{position:absolute;left:11mm;top:8mm;width:34mm;height:14mm;display:flex;align-items:center;justify-content:flex-start}
 .pdf-logo img{max-width:100%;max-height:100%;object-fit:contain}
-.pdf-title{position:absolute;right:12mm;top:8mm;font-size:24px;font-weight:800;line-height:1}
-.pdf-brand{position:absolute;left:12mm;top:37mm;color:var(--teal);font-size:14px;font-weight:700}
-.pdf-email{position:absolute;left:12mm;top:45mm;font-size:10.5px}
-.pdf-content{padding:10mm 12mm 14mm}
-.pdf-top-grid{display:grid;grid-template-columns:1fr 54mm;gap:8mm;align-items:start}
-.section-title{font-size:15px;font-weight:800;margin:0 0 2.5mm}
-.section-line{width:14mm;height:1.2mm;background:var(--teal);margin:0 0 5.5mm}
-.pdf-fields{display:grid;grid-template-columns:31mm 1fr 20mm 1fr;gap:4mm 4mm;align-items:center}
-.pdf-fields .label{font-size:10pt;font-weight:700}
-.pdf-fields .value{background:#ebe9ec;padding:2.2mm 3mm;min-height:6.6mm;display:flex;align-items:center}
+.pdf-title{position:absolute;right:12mm;top:9mm;font-size:18px;font-weight:800;line-height:1.05;letter-spacing:.02em;text-align:right}
+.pdf-brand{position:absolute;left:12mm;top:23.5mm;color:#d9f5f8;font-size:10.5px;font-weight:700;letter-spacing:.18em}
+.pdf-email{position:absolute;left:12mm;top:29.5mm;font-size:8.8px;opacity:.92}
+.pdf-content{padding:7mm 11mm 9mm}
+.pdf-top-grid{display:grid;grid-template-columns:minmax(0,1fr) 44mm;gap:7mm;align-items:start}
+.section-title{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#1f2937;margin:0 0 1.8mm}
+.section-line{width:12mm;height:.9mm;background:var(--teal);margin:0 0 4.2mm;border-radius:999px}
+.report-section{margin-top:6.5mm}
+.report-section:first-child{margin-top:0}
+.report-section-metrics{margin-top:6mm}
+.report-section-notes{margin-top:7mm}
+.pdf-fields{display:grid;grid-template-columns:28mm 1fr 18mm 1fr;gap:3mm 4mm;align-items:center}
+.pdf-fields .label{font-size:9.3pt;font-weight:700;color:#344054}
+.pdf-fields .value{background:#fff;padding:2.2mm 3mm;min-height:7.2mm;display:flex;align-items:center;border:1px solid #dbe4ee;border-radius:10px;color:#111827}
 .pdf-fields .value input,
 .pdf-fields .value select,
 .pdf-fields .value textarea{padding:0;border:none;background:transparent;border-radius:0;font:inherit}
 .pdf-fields .span2{grid-column:2 / span 3}
-.photo-slot{width:50mm;height:54mm;border:4px solid var(--navy);border-radius:5mm;background:#ddd;overflow:hidden;justify-self:end;margin-top:0}
+.photo-slot{width:42mm;height:52mm;border:1px solid #dbe4ee;border-radius:18px;background:#f5f7fb;overflow:hidden;justify-self:end;margin-top:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
 .photo-slot img{width:100%;height:100%;object-fit:cover}
-.notes-box{background:#ebe9ec;min-height:26mm;padding:4mm;white-space:pre-wrap}
+.notes-box{background:#fff;min-height:22mm;padding:4mm;border:1px solid #dbe4ee;border-radius:16px;white-space:pre-wrap;line-height:1.45;color:#1f2937}
 .no-print{display:block}
 .local-warning{padding:12px 14px;border:1px solid #f5c2c7;background:#fff3f4;color:#842029;border-radius:12px;margin-bottom:14px}
 @media print{
+  @page{size:A4 portrait;margin:8mm}
   body{background:#fff}
   .topbar,.page-toolbar,.no-print,.screen-only,.local-warning{display:none !important}
   .container{max-width:none;padding:0}
   .card{box-shadow:none;border:none}
-  .pdf-page{box-shadow:none;margin:0;width:auto;min-height:auto;page-break-after:always}
+  .pdf-page{box-shadow:none;margin:0;width:auto;min-height:auto;page-break-after:always;border-radius:0}
   .pdf-page:last-child{page-break-after:auto}
+  .pdf-hero{height:32mm;border-bottom-left-radius:18px;border-bottom-right-radius:18px}
+  .pdf-logo{top:6mm;width:30mm;height:12mm}
+  .pdf-title{top:6.5mm;font-size:16px}
+  .pdf-brand{top:18.5mm;font-size:9.5px}
+  .pdf-email{top:23.8mm;font-size:8px}
+  .pdf-content{padding:5mm 8mm 6mm}
+  .pdf-top-grid{grid-template-columns:minmax(0,1fr) 38mm;gap:6mm}
+  .pdf-fields{grid-template-columns:25mm 1fr 16mm 1fr;gap:2.4mm 3mm}
+  .pdf-fields .label{font-size:8.6pt}
+  .pdf-fields .value{min-height:6.4mm;padding:1.5mm 2.2mm;border-radius:8px}
+  .photo-slot{width:38mm;height:48mm;border-radius:14px}
+  .report-section-metrics{margin-top:4.5mm !important}
+  .report-section-notes{margin-top:5mm !important}
+  .metric-grid{gap:3mm}
+  .metric-cell{padding:2.5mm;border-radius:12px;box-shadow:none}
+  .metric-head{padding-bottom:2mm;font-size:.8rem}
+  .metric-box{height:11mm}
+  .metric-value{font-size:.84rem}
+  .notes-box{min-height:16mm;padding:3mm;border-radius:12px;line-height:1.35}
+  .blob.a{width:48mm;height:18mm;top:-10mm}
+  .blob.b{width:42mm;height:15mm;top:7mm}
+  .blob.c{width:36mm;height:14mm;bottom:-11mm}
 }
+
 @media (max-width:960px){
   .grid-4,.grid-3,.grid-2,.filters{grid-template-columns:1fr 1fr}
   .history-item{grid-template-columns:1fr}
 }
 @media (max-width:720px){
   .grid-4,.grid-3,.grid-2,.filters{grid-template-columns:1fr}
-  .pdf-page{width:100%;min-height:auto}
-  .pdf-hero{height:54mm}
-  .pdf-title{font-size:1.65rem;right:12px;top:12px}
-  .pdf-brand{left:12px;top:82px}
-  .pdf-email{left:12px;top:104px}
+  .pdf-page{width:100%;min-height:auto;border-radius:18px}
+  .pdf-hero{height:36mm}
+  .pdf-title{font-size:1.1rem;right:12px;top:12px}
+  .pdf-brand{left:12px;top:56px;font-size:.62rem}
+  .pdf-email{left:12px;top:72px;font-size:.56rem}
   .pdf-content{padding:16px}
   .pdf-top-grid{grid-template-columns:1fr}
-  .photo-slot{justify-self:start;width:180px;height:200px}
+  .photo-slot{justify-self:start;width:170px;height:200px}
   .pdf-fields{grid-template-columns:1fr}
   .pdf-fields .span2{grid-column:auto}
   .metric-grid{grid-template-columns:1fr}
 }
+
