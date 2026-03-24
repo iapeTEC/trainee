@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ranking • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Ranking de alunos</h1>
+        <div class="small-muted">Geral e por competência.</div>
+      </div>
+      <div class="actions no-print" id="metricButtons">
+        <button class="btn btn-primary metricBtn" data-metric="GERAL" type="button">Geral</button>
+        <button class="btn btn-secondary metricBtn" data-metric="FREQUENCIA" type="button">Frequência</button>
+        <button class="btn btn-secondary metricBtn" data-metric="PONTUALIDADE" type="button">Pontualidade</button>
+        <button class="btn btn-secondary metricBtn" data-metric="ENGAJAMENTO" type="button">Engajamento</button>
+        <button class="btn btn-secondary metricBtn" data-metric="RENDIMENTO" type="button">Rendimento</button>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-hd"><h2>Filtros</h2></div>
+      <div class="card-bd">
+        <div class="filters">
+          <div class="field"><label>Status</label><select id="f_status"><option value="ACTIVE" selected>Ativos</option><option value="INACTIVE">Inativos</option><option value="">Todos</option></select></div>
+          <div class="field"><label>Turma</label><select id="f_class"><option value="">Todas</option></select></div>
+          <div class="field"><label>Data inicial</label><input type="date" id="f_from"></div>
+          <div class="field"><label>Data final</label><input type="date" id="f_to"></div>
+          <div class="actions"><button class="btn btn-secondary" id="btnReload" type="button">Atualizar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2 id="rankTitle">Ranking geral</h2><div class="small-muted" id="resultCount">0 registros</div></div>
+      <div class="card-bd table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Frequência</th>
+              <th>Pontualidade</th>
+              <th>Engajamento</th>
+              <th>Rendimento</th>
+              <th>Geral</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function(){
+      window.UI.requireAuth();
+      window.UI.mountNav('ranking');
+      let currentMetric = 'GERAL';
+
+      const tbody = document.getElementById('tbody');
+      const rankTitle = document.getElementById('rankTitle');
+
+      function titleFor(metric){
+        const map = {
+          GERAL: 'Ranking geral',
+          FREQUENCIA: 'Ranking por frequência',
+          PONTUALIDADE: 'Ranking por pontualidade',
+          ENGAJAMENTO: 'Ranking por engajamento',
+          RENDIMENTO: 'Ranking por rendimento'
+        };
+        return map[metric] || 'Ranking';
+      }
+
+      async function loadClasses(){
+        try {
+          const data = await window.Api.apiPost('listClasses', {});
+          const sel = document.getElementById('f_class');
+          data.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            sel.appendChild(opt);
+          });
+        } catch (_) {}
+      }
+
+      async function loadRanking(){
+        try {
+          const filters = {
+            status: document.getElementById('f_status').value,
+            class_name: document.getElementById('f_class').value,
+            date_from: document.getElementById('f_from').value,
+            date_to: document.getElementById('f_to').value
+          };
+          const data = await window.Api.apiPost('getRanking', { metric: currentMetric, filters });
+          rankTitle.textContent = titleFor(currentMetric);
+          document.getElementById('resultCount').textContent = `${data.count} registros`;
+          tbody.innerHTML = data.rows.map(r => `
+            <tr>
+              <td><strong>${r.position}</strong></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <img class="avatar" src="${window.UI.escapeHtml(r.photo_url || window.APP_CONFIG.DEFAULT_PHOTO || '')}" onerror="this.style.visibility='hidden'">
+                  <div><a href="student.html?student_id=${encodeURIComponent(r.student_id)}" style="font-weight:800;">${window.UI.escapeHtml(r.name)}</a></div>
+                </div>
+              </td>
+              <td>${window.UI.escapeHtml(r.class_name || '—')}</td>
+              <td>${window.UI.pctBar(r.metrics.FREQUENCIA)}</td>
+              <td>${window.UI.pctBar(r.metrics.PONTUALIDADE)}</td>
+              <td>${window.UI.pctBar(r.metrics.ENGAJAMENTO)}</td>
+              <td>${window.UI.pctBar(r.metrics.RENDIMENTO)}</td>
+              <td><strong>${Number(r.metrics.GERAL || 0).toFixed(1).replace('.0','')}%</strong></td>
+            </tr>
+          `).join('');
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      document.querySelectorAll('.metricBtn').forEach(btn => btn.addEventListener('click', () => {
+        currentMetric = btn.dataset.metric;
+        document.querySelectorAll('.metricBtn').forEach(x => { x.classList.remove('btn-primary'); x.classList.add('btn-secondary'); });
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-secondary');
+        loadRanking();
+      }));
+      document.getElementById('btnReload').addEventListener('click', loadRanking);
+      ['f_status','f_class','f_from','f_to'].forEach(id => document.getElementById(id).addEventListener('change', loadRanking));
+
+      await loadClasses();
+      await loadRanking();
+    })();
+  </script>
+</body>
+</html>

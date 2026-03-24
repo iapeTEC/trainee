@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faltas • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Relatório de faltas</h1>
+        <div class="small-muted">Leitura direta da planilha de presença externa.</div>
+      </div>
+      <div class="actions no-print">
+        <button class="btn btn-secondary" id="btnPrint" type="button">Imprimir</button>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-hd"><h2>Filtros</h2></div>
+      <div class="card-bd">
+        <div class="filters">
+          <div class="field"><label>Busca</label><input id="f_q" placeholder="Aluno, turma ou observação"></div>
+          <div class="field"><label>Turma</label><select id="f_class"><option value="">Todas</option></select></div>
+          <div class="field"><label>Data inicial</label><input type="date" id="f_from"></div>
+          <div class="field"><label>Data final</label><input type="date" id="f_to"></div>
+          <div class="actions"><button class="btn btn-secondary" id="btnReset" type="button">Limpar</button><button class="btn btn-primary" id="btnReload" type="button">Atualizar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Faltas encontradas</h2><div class="small-muted" id="resultCount">0 registros</div></div>
+      <div class="card-bd table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Observação</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function(){
+      window.UI.requireAuth();
+      window.UI.mountNav('absences');
+      const tbody = document.getElementById('tbody');
+
+      async function loadClasses(){
+        try {
+          const data = await window.Api.apiPost('listClasses', {});
+          const sel = document.getElementById('f_class');
+          data.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            sel.appendChild(opt);
+          });
+        } catch (_) {}
+      }
+
+      async function loadRows(){
+        try {
+          const filters = {
+            q: document.getElementById('f_q').value.trim(),
+            class_name: document.getElementById('f_class').value,
+            date_from: document.getElementById('f_from').value,
+            date_to: document.getElementById('f_to').value
+          };
+          const data = await window.Api.apiPost('getAbsenceReport', { filters });
+          document.getElementById('resultCount').textContent = `${data.count} registros`;
+          tbody.innerHTML = data.rows.map(r => `
+            <tr>
+              <td>${window.Api.fmtDate(r.date)}</td>
+              <td>${window.UI.escapeHtml(r.student)}</td>
+              <td>${window.UI.escapeHtml(r.class_name || '—')}</td>
+              <td>${window.UI.escapeHtml(r.notes || '—')}</td>
+              <td>${window.UI.escapeHtml(r.source || '—')}</td>
+            </tr>
+          `).join('');
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      document.getElementById('btnReload').addEventListener('click', loadRows);
+      document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('f_q').value = '';
+        document.getElementById('f_class').value = '';
+        document.getElementById('f_from').value = '';
+        document.getElementById('f_to').value = '';
+        loadRows();
+      });
+      document.getElementById('btnPrint').addEventListener('click', () => window.print());
+      ['f_q','f_class','f_from','f_to'].forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadRows));
+
+      await loadClasses();
+      await loadRows();
+    })();
+  </script>
+</body>
+</html>

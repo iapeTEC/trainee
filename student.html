@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aluno • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="page-toolbar no-print" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+      <div>
+        <h1 style="margin:0 0 4px;">Cadastro pessoal</h1>
+        <div class="small-muted" id="subtitle">Carregando...</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" id="btnBack">Voltar</button>
+        <button class="btn btn-secondary" type="button" id="btnEdit">Editar</button>
+        <button class="btn btn-primary" type="button" id="btnSave">Salvar</button>
+        <button class="btn btn-secondary" type="button" id="btnPrint">Imprimir</button>
+      </div>
+    </div>
+
+    <div class="pdf-page" id="reportRoot">
+      <div class="pdf-hero">
+        <div class="blob a"></div>
+        <div class="blob b"></div>
+        <div class="blob c"></div>
+        <div class="pdf-logo" id="logoWrap"></div>
+        <div class="pdf-title">Cadastro<span style="font-weight:700">Pessoal</span></div>
+        <div class="pdf-brand">IAPE TRAINEE</div>
+        <div class="pdf-email" id="brandEmail"></div>
+      </div>
+
+      <div class="pdf-content">
+        <div class="pdf-top-grid">
+          <div>
+            <div class="section-title">INFORMAÇÕES PESSOAIS</div>
+            <div class="section-line"></div>
+
+            <div class="pdf-fields">
+              <div class="label">Nome Completo</div>
+              <div class="value span2"><input id="st_name" style="width:100%;outline:none"></div>
+
+              <div class="label">Endereço</div>
+              <div class="value span2"><input id="st_address" style="width:100%;outline:none"></div>
+
+              <div class="label">Data de Nascimento</div>
+              <div class="value"><input id="st_birth_ui" inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA" style="width:100%;outline:none"><input type="hidden" id="st_birth"></div>
+              <div class="label">WhatsApp</div>
+              <div class="value"><input id="st_phone" style="width:100%;outline:none"></div>
+
+              <div class="label">Curso</div>
+              <div class="value">
+                <select id="st_course" style="width:100%;outline:none">
+                  <option value=""></option>
+                  <option value="ADM 01">ADM 01</option>
+                  <option value="ADM 02">ADM 02</option>
+                  <option value="WEB 01">WEB 01</option>
+                  <option value="WEB 02">WEB 02</option>
+                </select>
+              </div>
+              <div class="label">Turma</div>
+              <div class="value"><input id="st_class" readonly style="width:100%;outline:none"></div>
+
+              <div class="label">Gênero</div>
+              <div class="value">
+                <select id="st_gender" style="width:100%;outline:none">
+                  <option value=""></option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                </select>
+              </div>
+              <div class="label">Tipo de Bolsa</div>
+              <div class="value">
+                <select id="st_plan" style="width:100%;outline:none">
+                  <option value=""></option>
+                  <option value="EMPRESARIO">EMPRESARIO</option>
+                  <option value="PROJETO TRANSFORME O FUTURO">PROJETO TRANSFORME O FUTURO</option>
+                  <option value="OBREIRO">OBREIRO</option>
+                  <option value="BOLSISTA">BOLSISTA</option>
+                  <option value="SILVER">SILVER</option>
+                  <option value="PREMIUM">PREMIUM</option>
+                  <option value="GOLD">GOLD</option>
+                </select>
+              </div>
+
+              <div class="label">Idade</div>
+              <div class="value"><input id="st_age" readonly style="width:100%;outline:none"></div>
+              <div class="label">Status</div>
+              <div class="value">
+                <select id="st_status" style="width:100%;outline:none">
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="photo-slot"><img id="photoPreview" alt="Foto"></div>
+            <div class="no-print" style="margin-top:10px;display:grid;gap:8px;">
+              <div class="field">
+                <label>URL da foto</label>
+                <input id="st_photo" placeholder="https://...">
+              </div>
+              <div class="small-muted">A foto grande do relatório é atualizada automaticamente pela URL.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8mm;">
+          <div class="section-title">Ocorrências</div>
+          <div class="metric-grid" id="metricGrid"></div>
+        </div>
+
+        <div style="margin-top:10mm;">
+          <div class="section-title">Observações:</div>
+          <div class="notes-box"><textarea id="st_notes" style="width:100%;min-height:24mm;border:none;background:transparent;resize:vertical;outline:none;font:inherit"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3 no-print" style="margin-top:16px;" id="scoreCards">
+      <div class="card" data-comp="PONTUALIDADE">
+        <div class="card-hd"><h3>Pontualidade</h3></div>
+        <div class="card-bd">
+          <div class="score-inline"><input type="range" min="0" max="100" value="100" id="range_PONTUALIDADE"><div class="pct" id="pct_PONTUALIDADE">100%</div></div>
+          <div class="field" style="margin-top:10px;"><label>Data</label><input type="date" id="date_PONTUALIDADE"></div>
+          <div class="field" style="margin-top:10px;"><label>Observação do lançamento</label><textarea id="note_PONTUALIDADE" placeholder="Opcional"></textarea></div>
+          <div class="actions" style="margin-top:12px;"><button class="btn btn-primary btnAddScore" data-comp="PONTUALIDADE" type="button">Registrar</button></div>
+        </div>
+      </div>
+      <div class="card" data-comp="ENGAJAMENTO">
+        <div class="card-hd"><h3>Engajamento</h3></div>
+        <div class="card-bd">
+          <div class="score-inline"><input type="range" min="0" max="100" value="100" id="range_ENGAJAMENTO"><div class="pct" id="pct_ENGAJAMENTO">100%</div></div>
+          <div class="field" style="margin-top:10px;"><label>Data</label><input type="date" id="date_ENGAJAMENTO"></div>
+          <div class="field" style="margin-top:10px;"><label>Observação do lançamento</label><textarea id="note_ENGAJAMENTO" placeholder="Opcional"></textarea></div>
+          <div class="actions" style="margin-top:12px;"><button class="btn btn-primary btnAddScore" data-comp="ENGAJAMENTO" type="button">Registrar</button></div>
+        </div>
+      </div>
+      <div class="card" data-comp="RENDIMENTO">
+        <div class="card-hd"><h3>Rendimento</h3></div>
+        <div class="card-bd">
+          <div class="score-inline"><input type="range" min="0" max="100" value="100" id="range_RENDIMENTO"><div class="pct" id="pct_RENDIMENTO">100%</div></div>
+          <div class="field" style="margin-top:10px;"><label>Data</label><input type="date" id="date_RENDIMENTO"></div>
+          <div class="field" style="margin-top:10px;"><label>Observação do lançamento</label><textarea id="note_RENDIMENTO" placeholder="Opcional"></textarea></div>
+          <div class="actions" style="margin-top:12px;"><button class="btn btn-primary btnAddScore" data-comp="RENDIMENTO" type="button">Registrar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card no-print" style="margin-top:16px;">
+      <div class="card-hd"><h2>Histórico de lançamentos</h2><div class="small-muted">Mais recentes primeiro</div></div>
+      <div class="card-bd">
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function(){
+      const user = window.UI.requireAuth();
+      window.UI.mountNav('');
+
+      const studentId = window.UI.getParam('student_id');
+      const isNew = window.UI.getParam('new') === '1';
+      const canEdit = String(user.role || '').toUpperCase() === 'EDITOR';
+      let editing = isNew && canEdit;
+      let currentStudentId = studentId || '';
+
+      const ids = ['st_name','st_address','st_birth_ui','st_phone','st_course','st_class','st_gender','st_plan','st_status','st_notes','st_photo'];
+      const hiddenBirth = document.getElementById('st_birth');
+      const courseEl = document.getElementById('st_course');
+      const classEl = document.getElementById('st_class');
+
+      document.getElementById('brandEmail').textContent = window.APP_CONFIG.BRAND_EMAIL || 'iape.trainee@adventistas.org';
+      document.getElementById('logoWrap').innerHTML = window.APP_CONFIG.LOGO_URL ? `<img src="${window.UI.escapeHtml(window.APP_CONFIG.LOGO_URL)}">` : '';
+      document.getElementById('btnBack').addEventListener('click', () => window.history.length > 1 ? window.history.back() : (window.location.href = 'students.html'));
+      document.getElementById('btnPrint').addEventListener('click', () => window.print());
+      document.getElementById('btnEdit').addEventListener('click', () => { if (!canEdit) return; editing = !editing; applyEditMode(); });
+      document.getElementById('btnSave').addEventListener('click', saveStudent);
+      document.getElementById('st_photo').addEventListener('input', () => refreshPhoto(document.getElementById('st_photo').value));
+      document.getElementById('st_birth_ui').addEventListener('blur', updateAge);
+      courseEl.addEventListener('change', syncClassFromCourse);
+      window.UI.bindDateMask('st_birth_ui', 'st_birth');
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' && el.tagName !== 'TEXTAREA') ev.preventDefault();
+        });
+      });
+
+      ['PONTUALIDADE','ENGAJAMENTO','RENDIMENTO'].forEach(comp => {
+        const range = document.getElementById('range_' + comp);
+        const out = document.getElementById('pct_' + comp);
+        const date = document.getElementById('date_' + comp);
+        date.value = new Date().toISOString().slice(0, 10);
+        range.addEventListener('input', () => out.textContent = range.value + '%');
+      });
+
+      document.querySelectorAll('.btnAddScore').forEach(btn => btn.addEventListener('click', async () => {
+        if (!currentStudentId) return window.UI.toast('Salve o aluno antes de registrar pontuação.', 'err');
+        const comp = btn.dataset.comp;
+        try {
+          await window.Api.apiPost('addScoreEntry', {
+            entry: {
+              student_id: currentStudentId,
+              competency: comp,
+              score_pct: Number(document.getElementById('range_' + comp).value),
+              entry_date: document.getElementById('date_' + comp).value,
+              notes: document.getElementById('note_' + comp).value.trim()
+            }
+          });
+          document.getElementById('note_' + comp).value = '';
+          window.UI.toast('Lançamento salvo.');
+          await loadReport();
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }));
+
+      function syncClassFromCourse(){
+        const course = String(courseEl.value || '').trim();
+        if (course.endsWith('01')) classEl.value = '1';
+        else if (course.endsWith('02')) classEl.value = '2';
+        else classEl.value = '';
+      }
+
+      function refreshPhoto(url){
+        const img = document.getElementById('photoPreview');
+        img.src = url || window.APP_CONFIG.DEFAULT_PHOTO || '';
+      }
+
+      function updateAge(){
+        const age = window.UI.calcAgeFromIso(hiddenBirth.value);
+        document.getElementById('st_age').value = age;
+      }
+
+      function applyEditMode(){
+        document.getElementById('subtitle').textContent = isNew && !currentStudentId ? 'Novo cadastro' : (editing ? 'Modo de edição' : 'Visualização');
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (id === 'st_status' || id === 'st_course' || id === 'st_gender' || id === 'st_plan') {
+            el.disabled = !editing;
+          } else if (id === 'st_class') {
+            el.readOnly = true;
+            el.disabled = false;
+          } else {
+            el.readOnly = !editing;
+            if (el.tagName === 'TEXTAREA') el.disabled = !editing;
+          }
+        });
+        document.getElementById('st_notes').disabled = !editing;
+        document.getElementById('btnEdit').style.display = canEdit && currentStudentId ? 'inline-block' : 'none';
+        document.getElementById('btnSave').style.display = canEdit ? 'inline-block' : 'none';
+        document.getElementById('scoreCards').style.display = canEdit ? 'grid' : 'none';
+        document.querySelectorAll('.btnAddScore, .score-inline input, [id^="date_"], [id^="note_"]').forEach(el => el.disabled = !canEdit);
+      }
+
+      function fillStudent(student){
+        document.getElementById('st_name').value = student.name || '';
+        document.getElementById('st_address').value = student.address || '';
+        hiddenBirth.value = student.birth_date || '';
+        document.getElementById('st_birth_ui').value = student.birth_date_br || '';
+        document.getElementById('st_phone').value = student.phone_display || '';
+        document.getElementById('st_course').value = student.course_name || '';
+        document.getElementById('st_gender').value = student.gender || '';
+        document.getElementById('st_plan').value = student.plan_name || '';
+        document.getElementById('st_status').value = student.status || 'ACTIVE';
+        document.getElementById('st_notes').value = student.notes || '';
+        document.getElementById('st_photo').value = student.photo_url || '';
+        syncClassFromCourse();
+        if (student.class_name) classEl.value = student.class_name;
+        updateAge();
+        refreshPhoto(student.photo_url || '');
+      }
+
+      function metricCell(label, value){
+        const pct = Math.max(0, Math.min(100, Number(value || 0)));
+        return `
+          <div class="metric-cell">
+            <div class="metric-head">${label}</div>
+            <div class="metric-box">
+              <div class="metric-fill" style="width:${pct}%"></div>
+              <div class="metric-value">${pct.toFixed(1).replace('.0','')}%</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderMetrics(metrics){
+        document.getElementById('metricGrid').innerHTML = [
+          metricCell('FREQUÊNCIA', metrics.FREQUENCIA),
+          metricCell('PONTUALIDADE', metrics.PONTUALIDADE),
+          metricCell('ENGAJAMENTO', metrics.ENGAJAMENTO),
+          metricCell('RENDIMENTO', metrics.RENDIMENTO)
+        ].join('');
+      }
+
+      function renderHistory(entries){
+        const host = document.getElementById('historyList');
+        if (!entries.length) {
+          host.innerHTML = '<div class="small-muted">Nenhum lançamento manual ainda.</div>';
+          return;
+        }
+        host.innerHTML = entries.map(item => `
+          <div class="history-item">
+            <div><strong>${window.Api.fmtDate(item.entry_date)}</strong><div class="small-muted">${item.competency}</div></div>
+            <div>${item.notes ? window.UI.escapeHtml(item.notes) : '<span class="small-muted">Sem observação</span>'}</div>
+            <div>${window.UI.pctBar(item.score_pct)}</div>
+            <div class="actions">
+              ${canEdit ? `<button class="btn btn-secondary btnDeleteScore" data-id="${item.entry_id}">Excluir</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+        document.querySelectorAll('.btnDeleteScore').forEach(btn => btn.addEventListener('click', async () => {
+          if (!confirm('Excluir este lançamento?')) return;
+          try {
+            await window.Api.apiPost('deleteScoreEntry', { entry_id: btn.dataset.id });
+            window.UI.toast('Lançamento excluído.');
+            await loadReport();
+          } catch (err) {
+            window.UI.toast(err.message || String(err), 'err');
+          }
+        }));
+      }
+
+      async function loadStudent(){
+        if (isNew && !studentId) {
+          fillStudent({ status: 'ACTIVE' });
+          renderMetrics({ FREQUENCIA:0, PONTUALIDADE:0, ENGAJAMENTO:0, RENDIMENTO:0 });
+          renderHistory([]);
+          applyEditMode();
+          return;
+        }
+
+        try {
+          const data = await window.Api.apiPost('getStudent', { student_id: studentId });
+          currentStudentId = data.student.student_id;
+          fillStudent(data.student);
+          await loadReport();
+          applyEditMode();
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      async function loadReport(){
+        if (!currentStudentId) return;
+        const data = await window.Api.apiPost('getStudentReport', { student_id: currentStudentId });
+        fillStudent(data.student);
+        renderMetrics(data.metrics);
+        renderHistory(data.score_entries || []);
+        document.getElementById('subtitle').textContent = `${data.student.name} • ${data.student.class_name || 'Sem turma'} • Geral ${Number(data.metrics.GERAL || 0).toFixed(1).replace('.0','')}%`;
+      }
+
+      async function saveStudent(){
+        if (!canEdit) return;
+        syncClassFromCourse();
+        try {
+          const student = {
+            student_id: currentStudentId,
+            name: document.getElementById('st_name').value.trim(),
+            birth_date: hiddenBirth.value,
+            gender: document.getElementById('st_gender').value.trim(),
+            address: document.getElementById('st_address').value.trim(),
+            course_name: document.getElementById('st_course').value.trim(),
+            class_name: document.getElementById('st_class').value.trim(),
+            plan_name: document.getElementById('st_plan').value.trim(),
+            phone_display: document.getElementById('st_phone').value.trim(),
+            photo_url: document.getElementById('st_photo').value.trim(),
+            notes: document.getElementById('st_notes').value.trim(),
+            status: document.getElementById('st_status').value
+          };
+          const data = await window.Api.apiPost('upsertStudent', { student });
+          currentStudentId = data.student.student_id;
+          editing = false;
+          fillStudent(data.student);
+          await loadReport();
+          applyEditMode();
+          window.UI.toast('Cadastro salvo.');
+          if (isNew && !studentId) history.replaceState({}, '', 'student.html?student_id=' + encodeURIComponent(currentStudentId));
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      await loadStudent();
+      applyEditMode();
+    })();
+  </script>
+</body>
+</html>

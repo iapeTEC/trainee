@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Início • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Painel principal</h1>
+        <div class="small-muted">Cadastro, relatórios, faltas e ranking.</div>
+      </div>
+      <div class="actions screen-only">
+        <a class="btn btn-primary" href="students.html">Abrir alunos</a>
+        <a class="btn btn-secondary" href="reports.html">Abrir relatórios</a>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="kpi"><div class="label">Alunos ativos</div><div class="value" id="kpiStudents">—</div></div>
+      <div class="kpi"><div class="label">Turmas</div><div class="value" id="kpiClasses">—</div></div>
+      <div class="kpi"><div class="label">Faltas no período</div><div class="value" id="kpiAbsences">—</div></div>
+      <div class="kpi"><div class="label">Ranking topo</div><div class="value" id="kpiRanking">—</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card">
+        <div class="card-hd"><h2>Ações rápidas</h2></div>
+        <div class="card-bd">
+          <div class="actions" style="flex-direction:column;align-items:flex-start;">
+            <a class="btn btn-secondary" href="students.html">Lista de alunos</a>
+            <a class="btn btn-secondary" href="student.html?new=1">Cadastrar novo aluno</a>
+            <a class="btn btn-secondary" href="reports.html">Relatório para impressão</a>
+            <a class="btn btn-secondary" href="absences.html">Relatório de faltas</a>
+            <a class="btn btn-secondary" href="ranking.html">Ranking geral e por competência</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2>Status</h2></div>
+        <div class="card-bd">
+          <div class="small-muted" style="margin-bottom:8px;">Conectividade com o Apps Script</div>
+          <pre id="sysBox" style="background:#f6f8fa;border:1px solid var(--line);border-radius:14px;padding:14px;white-space:pre-wrap;margin:0;">Testando...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function(){
+      window.UI.requireAuth();
+      window.UI.mountNav('home');
+
+      try {
+        const ping = await fetch(window.APP_CONFIG.API_URL + '?action=ping', { redirect: 'follow' });
+        document.getElementById('sysBox').textContent = await ping.text();
+      } catch (err) {
+        document.getElementById('sysBox').textContent = err.message || String(err);
+      }
+
+      try {
+        const students = await window.Api.apiPost('listStudents', { filters: { status: 'ACTIVE' } });
+        document.getElementById('kpiStudents').textContent = students.count;
+      } catch (_) {}
+
+      try {
+        const classes = await window.Api.apiPost('listClasses', {});
+        document.getElementById('kpiClasses').textContent = classes.classes.length;
+      } catch (_) {}
+
+      try {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const last30 = new Date(today.getTime() - 29 * 86400000);
+        const ly = last30.getFullYear();
+        const lm = String(last30.getMonth() + 1).padStart(2, '0');
+        const ld = String(last30.getDate()).padStart(2, '0');
+        const abs = await window.Api.apiPost('getAbsenceReport', { filters: { date_from: `${ly}-${lm}-${ld}`, date_to: `${y}-${m}-${d}` } });
+        document.getElementById('kpiAbsences').textContent = abs.count;
+      } catch (_) {}
+
+      try {
+        const ranking = await window.Api.apiPost('getRanking', { metric: 'GERAL', filters: { status: 'ACTIVE' } });
+        document.getElementById('kpiRanking').textContent = ranking.rows[0] ? ranking.rows[0].name : '—';
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>

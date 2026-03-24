@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div class="container" style="max-width:520px;padding-top:60px;">
+    <div id="toastArea" class="toast-stack"></div>
+    <div class="local-warning" id="localWarning" style="display:none;">Você abriu o sistema em <strong>file://</strong>. Para o login e a sessão funcionarem direito, rode por <strong>http://localhost</strong> ou publique os arquivos no GitHub Pages.</div>
+    <div class="card">
+      <div class="card-hd"><h2>Acesso ao sistema</h2></div>
+      <div class="card-bd">
+        <div class="small-muted" style="margin-bottom:16px;">Entre com o usuário cadastrado no Apps Script.</div>
+        <form id="loginForm" class="form-grid">
+          <div class="field" style="grid-column:1/-1;">
+            <label>Usuário</label>
+            <input id="login" autocomplete="username" required>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label>Senha</label>
+            <input id="password" type="password" autocomplete="current-password" required>
+          </div>
+          <div style="grid-column:1/-1;display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" type="submit">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      if (window.location.protocol === 'file:') {
+        document.getElementById('localWarning').style.display = 'block';
+      }
+
+      if (window.Api.getToken() && window.Api.getUser().role && !window.Api.isExpired()) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        if (window.location.protocol === 'file:') {
+          window.UI.toast('Abra por http://localhost:8000 ou publique os arquivos. file:// não mantém a sessão corretamente.', 'err');
+          return;
+        }
+        try {
+          const data = await window.Api.apiPost('login', {
+            login: document.getElementById('login').value.trim(),
+            password: document.getElementById('password').value
+          });
+          window.Api.setSession(data.token, data.user, data.expires_at);
+          window.UI.toast('Login realizado.');
+          setTimeout(() => window.location.href = 'index.html', 250);
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

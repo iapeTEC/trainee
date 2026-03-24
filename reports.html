@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relatórios • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Relatório para impressão</h1>
+        <div class="small-muted">Selecione um ou vários alunos. A impressão sai com um aluno por página.</div>
+      </div>
+      <div class="actions no-print">
+        <button class="btn btn-secondary" id="btnSelectVisible" type="button">Selecionar visíveis</button>
+        <button class="btn btn-primary" id="btnPrintSelected" type="button">Imprimir selecionados</button>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-hd"><h2>Filtros</h2></div>
+      <div class="card-bd">
+        <div class="filters">
+          <div class="field"><label>Busca</label><input id="f_q" placeholder="Nome, turma, telefone"></div>
+          <div class="field"><label>Status</label><select id="f_status"><option value="ACTIVE" selected>Ativos</option><option value="INACTIVE">Inativos</option><option value="">Todos</option></select></div>
+          <div class="field"><label>Turma</label><select id="f_class"><option value="">Todas</option></select></div>
+          <div class="field"><label>Data inicial</label><input type="date" id="f_from"></div>
+          <div class="field"><label>Data final</label><input type="date" id="f_to"></div>
+        </div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn btn-secondary" id="btnReset" type="button">Limpar</button>
+          <button class="btn btn-primary" id="btnReload" type="button">Atualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-hd"><h2>Resultado</h2><div class="small-muted" id="resultCount">0 registros</div></div>
+      <div class="card-bd table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="chkAll"></th>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Frequência</th>
+              <th>Pontualidade</th>
+              <th>Engajamento</th>
+              <th>Rendimento</th>
+              <th>Geral</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="printArea" style="display:none;"></div>
+  </div>
+
+  <script>
+    (async function(){
+      window.UI.requireAuth();
+      window.UI.mountNav('reports');
+
+      let rowsCache = [];
+      const tbody = document.getElementById('tbody');
+
+      function pct(v){ return `${Number(v || 0).toFixed(1).replace('.0','')}%`; }
+
+      function currentFilters(){
+        return {
+          q: document.getElementById('f_q').value.trim(),
+          status: document.getElementById('f_status').value,
+          class_name: document.getElementById('f_class').value,
+          date_from: document.getElementById('f_from').value,
+          date_to: document.getElementById('f_to').value
+        };
+      }
+
+      function renderTable(rows){
+        document.getElementById('resultCount').textContent = `${rows.length} registros`;
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td><input type="checkbox" class="chkRow" data-id="${r.student_id}"></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <img class="avatar" src="${window.UI.escapeHtml(r.photo_url || window.APP_CONFIG.DEFAULT_PHOTO || '')}" onerror="this.style.visibility='hidden'">
+                <div>
+                  <a href="student.html?student_id=${encodeURIComponent(r.student_id)}" style="font-weight:800;">${window.UI.escapeHtml(r.name)}</a>
+                  <div class="small-muted">${window.UI.escapeHtml(r.plan_name || '')}</div>
+                </div>
+              </div>
+            </td>
+            <td>${window.UI.escapeHtml(r.class_name || '—')}</td>
+            <td>${window.UI.pctBar(r.metrics.FREQUENCIA)}</td>
+            <td>${window.UI.pctBar(r.metrics.PONTUALIDADE)}</td>
+            <td>${window.UI.pctBar(r.metrics.ENGAJAMENTO)}</td>
+            <td>${window.UI.pctBar(r.metrics.RENDIMENTO)}</td>
+            <td><strong>${pct(r.metrics.GERAL)}</strong></td>
+          </tr>
+        `).join('');
+      }
+
+      function printPageHtml(report){
+        const st = report.student;
+        const mt = report.metrics;
+        const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${window.UI.escapeHtml(window.APP_CONFIG.LOGO_URL)}">` : '';
+        function cell(label, value){
+          const pctValue = Math.max(0, Math.min(100, Number(value || 0)));
+          return `
+            <div class="metric-cell">
+              <div class="metric-head">${label}</div>
+              <div class="metric-box">
+                <div class="metric-fill" style="width:${pctValue}%"></div>
+                <div class="metric-value">${pctValue.toFixed(1).replace('.0','')}%</div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="pdf-page" style="page-break-after:always;">
+            <div class="pdf-hero">
+              <div class="blob a"></div>
+              <div class="blob b"></div>
+              <div class="pdf-logo">${logoHtml}</div>
+              <div class="pdf-title">Cadastro<span style="font-weight:700">Pessoal</span></div>
+              <div class="pdf-brand">IAPE TRAINEE</div>
+              <div class="pdf-email">${window.UI.escapeHtml(window.APP_CONFIG.BRAND_EMAIL || 'iape.trainee@adventistas.org')}</div>
+            </div>
+            <div class="pdf-content">
+              <div class="pdf-top-grid">
+                <div>
+                  <div class="section-title">INFORMAÇÕES PESSOAIS</div>
+                  <div class="section-line"></div>
+                  <div class="pdf-fields">
+                    <div class="label">Nome Completo</div><div class="value span2">${window.UI.escapeHtml(st.name || '')}</div>
+                    <div class="label">Endereço</div><div class="value span2">${window.UI.escapeHtml(st.address || '')}</div>
+                    <div class="label">Data de Nascimento</div><div class="value">${window.UI.escapeHtml(st.birth_date_br || '')}</div>
+                    <div class="label">WhatsApp</div><div class="value">${window.UI.escapeHtml(st.phone_display || '')}</div>
+                    <div class="label">Curso</div><div class="value">${window.UI.escapeHtml(st.course_name || '')}</div>
+                    <div class="label">Turma</div><div class="value">${window.UI.escapeHtml(st.class_name || '')}</div>
+                    <div class="label">Gênero</div><div class="value">${window.UI.escapeHtml(st.gender || '')}</div>
+                    <div class="label">Tipo de Bolsa</div><div class="value">${window.UI.escapeHtml(st.plan_name || '')}</div>
+                    <div class="label">Idade</div><div class="value">${window.UI.escapeHtml(String(st.age || ''))}</div>
+                  </div>
+                </div>
+                <div><div class="photo-slot">${st.photo_url ? `<img src="${window.UI.escapeHtml(st.photo_url)}">` : ''}</div></div>
+              </div>
+              <div style="margin-top:10mm;">
+                <div class="section-title">Ocorrências</div>
+                <div class="metric-grid">
+                  ${cell('FREQUÊNCIA', mt.FREQUENCIA)}
+                  ${cell('PONTUALIDADE', mt.PONTUALIDADE)}
+                  ${cell('ENGAJAMENTO', mt.ENGAJAMENTO)}
+                  ${cell('RENDIMENTO', mt.RENDIMENTO)}
+                </div>
+              </div>
+              <div style="margin-top:16mm;">
+                <div class="section-title">Observações:</div>
+                <div class="notes-box">${window.UI.escapeHtml(st.notes || '')}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadClasses(){
+        try {
+          const data = await window.Api.apiPost('listClasses', {});
+          const sel = document.getElementById('f_class');
+          data.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            sel.appendChild(opt);
+          });
+        } catch (_) {}
+      }
+
+      async function loadRows(){
+        try {
+          const data = await window.Api.apiPost('listReportRows', { filters: currentFilters() });
+          rowsCache = data.rows || [];
+          renderTable(rowsCache);
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      async function printSelected(){
+        const ids = Array.from(document.querySelectorAll('.chkRow:checked')).map(el => el.dataset.id);
+        if (!ids.length) return window.UI.toast('Selecione pelo menos um aluno.', 'err');
+        try {
+          const reports = await Promise.all(ids.map(student_id => window.Api.apiPost('getStudentReport', { student_id, filters: currentFilters() })));
+          const area = document.getElementById('printArea');
+          area.innerHTML = reports.map(printPageHtml).join('');
+          area.style.display = 'block';
+          window.print();
+          setTimeout(() => { area.style.display = 'none'; }, 150);
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      document.getElementById('btnReload').addEventListener('click', loadRows);
+      document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('f_q').value = '';
+        document.getElementById('f_status').value = 'ACTIVE';
+        document.getElementById('f_class').value = '';
+        document.getElementById('f_from').value = '';
+        document.getElementById('f_to').value = '';
+        loadRows();
+      });
+      document.getElementById('btnPrintSelected').addEventListener('click', printSelected);
+      document.getElementById('btnSelectVisible').addEventListener('click', () => document.querySelectorAll('.chkRow').forEach(el => el.checked = true));
+      document.getElementById('chkAll').addEventListener('change', (ev) => document.querySelectorAll('.chkRow').forEach(el => el.checked = ev.target.checked));
+      ['f_q','f_status','f_class','f_from','f_to'].forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadRows));
+
+      await loadClasses();
+      await loadRows();
+    })();
+  </script>
+</body>
+</html>

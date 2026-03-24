@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alunos • IAPE Trainee</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/ui.js"></script>
+</head>
+<body>
+  <div id="appNav"></div>
+  <div class="container">
+    <div id="toastArea" class="toast-stack"></div>
+
+    <div class="hero-mini">
+      <div>
+        <h1 style="margin:0 0 6px;">Lista de alunos</h1>
+        <div class="small-muted">Ordem alfabética, busca, turma e atalho para WhatsApp.</div>
+      </div>
+      <div class="actions screen-only">
+        <a class="btn btn-primary" href="student.html?new=1">Adicionar novo aluno</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Filtros</h2></div>
+      <div class="card-bd">
+        <div class="filters">
+          <div class="field">
+            <label>Busca</label>
+            <input id="f_q" placeholder="Nome, turma, telefone">
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="f_status">
+              <option value="ACTIVE" selected>Ativos</option>
+              <option value="INACTIVE">Inativos</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Turma</label>
+            <select id="f_class"><option value="">Todas</option></select>
+          </div>
+          <div class="field">
+            <label>Tipo de Bolsa</label>
+            <select id="f_plan">
+              <option value="">Todas</option>
+              <option value="EMPRESARIO">EMPRESARIO</option>
+              <option value="PROJETO TRANSFORME O FUTURO">PROJETO TRANSFORME O FUTURO</option>
+              <option value="OBREIRO">OBREIRO</option>
+              <option value="BOLSISTA">BOLSISTA</option>
+              <option value="SILVER">SILVER</option>
+              <option value="PREMIUM">PREMIUM</option>
+              <option value="GOLD">GOLD</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary" id="btnReset" type="button">Limpar</button>
+            <button class="btn btn-primary" id="btnReload" type="button">Atualizar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>Alunos</h2><div class="small-muted" id="resultCount">0 registros</div></div>
+      <div class="card-bd table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Tipo de Bolsa</th>
+              <th>Telefone</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function(){
+      window.UI.requireAuth();
+      window.UI.mountNav('students');
+
+      const tbody = document.getElementById('tbody');
+      const fields = ['f_q','f_status','f_class','f_plan'];
+
+      function rowPhoto(url){
+        return `<img class="avatar" src="${window.UI.escapeHtml(url || window.APP_CONFIG.DEFAULT_PHOTO || '')}" onerror="this.style.visibility='hidden'">`;
+      }
+
+      async function loadClasses(){
+        try {
+          const data = await window.Api.apiPost('listClasses', {});
+          const sel = document.getElementById('f_class');
+          data.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            sel.appendChild(opt);
+          });
+        } catch (_) {}
+      }
+
+      async function loadStudents(){
+        try {
+          const filters = {
+            q: document.getElementById('f_q').value.trim(),
+            status: document.getElementById('f_status').value,
+            class_name: document.getElementById('f_class').value,
+            plan_name: document.getElementById('f_plan').value.trim()
+          };
+          const data = await window.Api.apiPost('listStudents', { filters });
+          document.getElementById('resultCount').textContent = `${data.count} registros`;
+          tbody.innerHTML = data.students.map(st => `
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  ${rowPhoto(st.photo_url)}
+                  <div>
+                    <a href="student.html?student_id=${encodeURIComponent(st.student_id)}" style="font-weight:800;color:#111;">${window.UI.escapeHtml(st.name)}</a>
+                    <div class="small-muted">${window.UI.escapeHtml(st.course_name || '')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>${window.UI.escapeHtml(st.class_name || '—')}</td>
+              <td>${window.UI.escapeHtml(st.plan_name || '—')}</td>
+              <td>${window.UI.escapeHtml(st.phone_display || '—')}</td>
+              <td><span class="badge ${st.status === 'INACTIVE' ? 'inactive' : ''}">${st.status}</span></td>
+              <td>
+                <div class="actions">
+                  <a class="btn btn-secondary" href="student.html?student_id=${encodeURIComponent(st.student_id)}">Abrir</a>
+                  ${st.whatsapp_link ? `<a class="btn btn-soft" href="${window.UI.escapeHtml(st.whatsapp_link)}" target="_blank">WhatsApp</a>` : ''}
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      document.getElementById('btnReload').addEventListener('click', loadStudents);
+      document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('f_q').value = '';
+        document.getElementById('f_status').value = 'ACTIVE';
+        document.getElementById('f_class').value = '';
+        document.getElementById('f_plan').value = '';
+        loadStudents();
+      });
+      fields.forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadStudents));
+
+      await loadClasses();
+      await loadStudents();
+    })();
+  </script>
+</body>
+</html>
