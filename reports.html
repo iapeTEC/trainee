@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatórios - IAPE Trainee</title>
+  <title>Relatórios • IAPE Trainee</title>
   <link rel="stylesheet" href="assets/app.css">
   <script src="assets/config.js"></script>
   <script src="assets/api.js"></script>
@@ -18,7 +18,7 @@
     .result-actions{display:flex;gap:10px;flex-wrap:wrap}
     .report-title-preview{font-size:1.08rem;font-weight:800;color:#101828;margin:0 0 5px}
     .report-subtitle-preview{color:#667085;font-size:.92rem;margin:0}
-    .table-report thead th{white-space:nowrap}
+    .table-report thead th{white-space:nowrap;font-size:.88rem;line-height:1.15}
     .table-report tbody tr:nth-child(even){background:#f8fafc}
     .table-report td,.table-report th{vertical-align:middle}
     .table-report .col-num{width:52px;text-align:center;font-weight:800}
@@ -32,7 +32,7 @@
     .print-shell.active{display:block}
 
     .paper-page{width:210mm;min-height:297mm;margin:0 auto 10mm;background:#fff;color:#111827;position:relative;box-shadow:0 12px 40px rgba(15,23,42,.08)}
-        .paper-head{padding:10mm 12mm 6mm;border-bottom:2px solid #0f2747}
+        .paper-head{padding:10mm 12mm 5mm;border-bottom:none}
     .paper-head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12mm}
     .paper-brand{display:flex;align-items:flex-start;gap:10px}
     .paper-brand img{width:34mm;max-height:16mm;object-fit:contain}
@@ -48,7 +48,7 @@
     .paper-summary-card .v{font-size:13pt;color:#101828;font-weight:800;margin-top:3px}
     .paper-table-wrap{padding:0 12mm 9mm}
     .paper-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10pt}
-    .paper-table thead th{background:#0f2747;color:#fff;font-weight:800;padding:8px 7px;border:1px solid #0a1b31}
+    .paper-table thead th{background:#0f2747;color:#fff;font-weight:800;padding:6px 5px;border:1px solid #0a1b31;font-size:8.2pt;line-height:1.15;white-space:nowrap}
     .paper-table tbody td{padding:7px 7px;border:1px solid #d7dee8;color:#111827;vertical-align:middle}
     .paper-table tbody tr:nth-child(even){background:#f7f9fc}
     .paper-table .num{text-align:center;font-weight:800;width:10mm}
@@ -59,7 +59,7 @@
     .paper-foot{position:absolute;left:12mm;right:12mm;bottom:8mm;display:flex;justify-content:space-between;gap:10px;font-size:9pt;color:#475467;border-top:1px solid #d9e1ea;padding-top:3mm}
     .paper-criteria{margin-top:4px;font-size:9.5pt;color:#344054}
     .paper-criteria strong{color:#101828}
-    .paper-info-line{margin-top:3mm;font-size:9.5pt;color:#344054;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+    .paper-info-line{margin-top:2.5mm;font-size:9.3pt;color:#344054;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
     .paper-info-line .item{white-space:nowrap}
     .paper-info-line .k{font-weight:800;color:#101828}
     .paper-info-line .v{font-weight:400;color:#111827}
@@ -153,7 +153,7 @@
           </div>
           <div class="field">
             <label>Busca</label>
-            <input id="f_q" placeholder="Nome, turma, telefone, curso">
+            <input id="f_q" placeholder="Nome, telefone, curso">
           </div>
           <div class="field">
             <label>Status</label>
@@ -164,8 +164,8 @@
             </select>
           </div>
           <div class="field">
-            <label>Turma</label>
-            <select id="f_class"><option value="">Todas</option></select>
+            <label>Curso</label>
+            <select id="f_course"><option value="">Todos</option></select>
           </div>
           <div class="field">
             <label>Sexo</label>
@@ -209,7 +209,7 @@
           <div class="field">
             <label>Foto no relatório</label>
             <div class="switch-row">
-              <input id="f_photo" type="checkbox" checked>
+              <input id="f_photo" type="checkbox">
               <span>Mostrar foto quando existir</span>
             </div>
           </div>
@@ -239,12 +239,11 @@
             <tr>
               <th class="col-num"><input type="checkbox" id="chkAll"></th>
               <th class="col-num">Nº</th>
-              <th class="col-photo" id="thPhoto">Foto</th>
+              <th class="col-photo" id="thPhoto" style="display:none;">Foto</th>
               <th>Nome</th>
               <th>Idade</th>
               <th>Sexo</th>
-              <th>Curso</th>
-              <th>Turma</th>
+  <th>Curso</th>
               <th>Bolsa</th>
             </tr>
           </thead>
@@ -288,6 +287,16 @@
         return '—';
       }
 
+      function formatPlanNameForReport(plan){
+        const raw = String(plan || '').trim().replace(/\s+/g, ' ');
+        if (!raw) return '—';
+        const parts = raw.split(' ');
+        if (parts.length > 1 && String(parts[0] || '').toLowerCase() === 'projeto') {
+          return 'PROJETO ' + parts.slice(1).map(p => (p[0] || '').toUpperCase()).join('');
+        }
+        return raw;
+      }
+
       function photoHtml(url, size){
         const src = escape(url || window.APP_CONFIG.DEFAULT_PHOTO || '');
         return `<img src="${src}" onerror="this.style.visibility='hidden'" style="width:${size};height:${size};object-fit:cover;border-radius:12px;border:1px solid #d6dde6;background:#eef2f6;">`;
@@ -298,7 +307,7 @@
           mode: val('f_mode'),
           q: val('f_q').trim(),
           status: val('f_status'),
-          class_name: val('f_class'),
+          course_name: val('f_course'),
           gender: val('f_gender'),
           plan_name: val('f_plan'),
           age_min: val('f_age_min'),
@@ -315,7 +324,6 @@
         return {
           q: f.q,
           status: f.status,
-          class_name: f.class_name,
           gender: f.gender,
           plan_name: f.plan_name,
           date_from: f.date_from,
@@ -325,9 +333,9 @@
 
       function buildCriteriaText(f){
         const parts = [];
-        if (f.class_name) parts.push(`Turma: ${f.class_name}`);
+        if (f.course_name) parts.push(`Curso: ${f.course_name}`);
         if (f.gender) parts.push(`Sexo: ${f.gender}`);
-        if (f.plan_name) parts.push(`Bolsa: ${f.plan_name}`);
+        if (f.plan_name) parts.push(`Bolsa: ${formatPlanNameForReport(f.plan_name)}`);
         if (f.age_min && f.age_max) {
           if (Number(f.age_min) === Number(f.age_max)) parts.push(`Idade: ${f.age_min} anos`);
           else parts.push(`Idade: ${f.age_min} a ${f.age_max} anos`);
@@ -352,16 +360,21 @@
             return `Relatório de alunos de ${min} a ${max} anos`;
           }
         }
-        if (f.plan_name && !f.class_name && !f.gender) return `Relatório de alunos do tipo de bolsa ${f.plan_name}`;
-        if (f.class_name && !f.plan_name && !f.gender) return `Relatório de alunos da turma ${f.class_name}`;
-        if (f.gender && !f.class_name && !f.plan_name) return `Relatório de alunos do sexo ${f.gender}`;
+        if (f.plan_name && !f.course_name && !f.gender) return `Relatório de alunos do tipo de bolsa ${formatPlanNameForReport(f.plan_name)}`;
+        if (f.course_name && !f.plan_name && !f.gender) return `Relatório de alunos do curso ${f.course_name}`;
+        if (f.gender && !f.course_name && !f.plan_name) return `Relatório de alunos do sexo ${f.gender}`;
 
         const pieces = [];
-        if (f.class_name) pieces.push(`turma ${f.class_name}`);
-        if (f.plan_name) pieces.push(`bolsa ${f.plan_name}`);
+        if (f.course_name) pieces.push(`curso ${f.course_name}`);
+        if (f.plan_name) pieces.push(`bolsa ${formatPlanNameForReport(f.plan_name)}`);
         if (f.gender) pieces.push(`sexo ${f.gender}`);
         if (pieces.length) return `Relatório de alunos por ${pieces.join(' • ')}`;
         return 'Relatório geral de alunos';
+      }
+
+      function passesCourseFilter(row, f){
+        if (!f.course_name) return true;
+        return String(row.course_name || '').trim().toUpperCase() === String(f.course_name || '').trim().toUpperCase();
       }
 
       function passesAgeFilter(row, f){
@@ -460,8 +473,7 @@
               <td class="col-mini">${escape(String(r.age || '—'))}</td>
               <td class="col-mini">${genderShort(r.gender)}</td>
               <td class="col-left">${escape(r.course_name || '—')}</td>
-              <td class="col-mini">${escape(r.class_name || '—')}</td>
-              <td class="col-left">${escape(r.plan_name || '—')}</td>
+              <td class="col-left">${escape(formatPlanNameForReport(r.plan_name))}</td>
             </tr>
           `;
         }).join('');
@@ -469,18 +481,16 @@
 
       async function loadOptions(){
         try {
-          const [classesData, studentsData] = await Promise.all([
-            window.Api.apiPost('listClasses', {}),
-            window.Api.apiPost('listStudents', { filters: { status: '' } })
-          ]);
+          const studentsData = await window.Api.apiPost('listStudents', { filters: { status: '' } });
           studentsOptionsCache = studentsData.students || [];
 
-          const classSel = document.getElementById('f_class');
-          (classesData.classes || []).forEach(c => {
+          const courseSel = document.getElementById('f_course');
+          const courses = Array.from(new Set(studentsOptionsCache.map(s => String(s.course_name || '').trim()).filter(Boolean))).sort((a,b) => a.localeCompare(b, 'pt-BR'));
+          courses.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c;
             opt.textContent = c;
-            classSel.appendChild(opt);
+            courseSel.appendChild(opt);
           });
 
           const planSel = document.getElementById('f_plan');
@@ -506,6 +516,7 @@
           ]);
 
           let rows = mergeStudentAndMetrics(studentsData.students || [], metricsData.rows || []);
+          rows = rows.filter(r => passesCourseFilter(r, f));
           rows = rows.filter(r => passesAgeFilter(r, f));
           rows = sortRows(rows, f.sort);
           rowsCache = rows;
@@ -547,6 +558,9 @@
         const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${escape(window.APP_CONFIG.LOGO_URL)}">` : '';
         const photoHeader = withPhoto ? '<th style="width:18mm;">Foto</th>' : '';
         const photoCell = (r) => withPhoto ? `<td class="photo">${photoHtml(r.photo_url, '13mm')}</td>` : '';
+        const nameWidth = withPhoto ? '80mm' : '97mm';
+        const courseWidth = withPhoto ? '22mm' : '24mm';
+        const planWidth = withPhoto ? '34mm' : '33mm';
 
         return `
           <section class="paper-page">
@@ -572,12 +586,11 @@
                   <tr>
                     <th style="width:10mm;">Nº</th>
                     ${photoHeader}
-                    <th style="width:78mm;">Nome</th>
+                    <th style="width:${nameWidth};">Nome</th>
                     <th style="width:12mm;">Idade</th>
                     <th style="width:10mm;">Sexo</th>
-                    <th style="width:22mm;">Curso</th>
-                    <th style="width:12mm;">Turma</th>
-                    <th style="width:35mm;">Bolsa</th>
+                    <th style="width:${courseWidth};">Curso</th>
+                    <th style="width:${planWidth};">Bolsa</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -589,8 +602,7 @@
                       <td class="center">${escape(String(r.age || '—'))}</td>
                       <td class="center">${genderShort(r.gender)}</td>
                       <td class="center">${escape(r.course_name || '—')}</td>
-                      <td class="center">${escape(r.class_name || '—')}</td>
-                      <td>${escape(r.plan_name || '—')}</td>
+                      <td>${escape(formatPlanNameForReport(r.plan_name))}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -605,7 +617,7 @@
       }
 
       function buildListPrintHtml(rows){
-        const perPage = checked('f_photo') ? 20 : 26;
+        const perPage = checked('f_photo') ? 21 : 28;
         const pages = [];
         for (let i = 0; i < rows.length; i += perPage) pages.push(rows.slice(i, i + perPage));
         return pages.map((slice, idx) => listPageHtml(slice, idx + 1, pages.length, rows, idx * perPage + 1)).join('');
@@ -728,11 +740,11 @@
 
       document.getElementById('btnReload').addEventListener('click', loadRows);
       document.getElementById('btnReset').addEventListener('click', () => {
-        ['f_q','f_class','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to'].forEach(id => document.getElementById(id).value = '');
+        ['f_q','f_course','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('f_mode').value = 'list';
         document.getElementById('f_status').value = 'ACTIVE';
         document.getElementById('f_sort').value = 'name_asc';
-        document.getElementById('f_photo').checked = true;
+        document.getElementById('f_photo').checked = false;
         clearSelection();
         loadRows();
       });
@@ -741,7 +753,7 @@
       document.getElementById('btnPrintSelected').addEventListener('click', () => printRows(getSelectedRows()));
       document.getElementById('btnPrintFiltered').addEventListener('click', () => printRows(rowsCache.slice()));
       document.getElementById('chkAll').addEventListener('change', (ev) => document.querySelectorAll('.chkRow').forEach(el => { el.checked = ev.target.checked; }));
-      ['f_mode','f_q','f_status','f_class','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to','f_sort','f_photo'].forEach(id => {
+      ['f_mode','f_q','f_status','f_course','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to','f_sort','f_photo'].forEach(id => {
         document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadRows);
       });
 
