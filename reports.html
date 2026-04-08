@@ -8,49 +8,239 @@
   <script src="assets/config.js"></script>
   <script src="assets/api.js"></script>
   <script src="assets/ui.js"></script>
+  <style>
+    .report-toolbar-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+    .report-preview-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .mini-pill{padding:8px 12px;border-radius:999px;border:1px solid #d8e0ea;background:#fff;color:#344054;font-size:.92rem;font-weight:700}
+    .mini-pill strong{color:#101828}
+    .switch-row{display:flex;align-items:center;gap:10px;min-height:44px}
+    .switch-row input{width:18px;height:18px}
+    .result-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .report-title-preview{font-size:1.08rem;font-weight:800;color:#101828;margin:0 0 5px}
+    .report-subtitle-preview{color:#667085;font-size:.92rem;margin:0}
+    .table-report thead th{white-space:nowrap}
+    .table-report tbody tr:nth-child(even){background:#f8fafc}
+    .table-report td,.table-report th{vertical-align:middle}
+    .table-report .col-num{width:52px;text-align:center;font-weight:800}
+    .table-report .col-photo{width:72px;text-align:center}
+    .table-report .col-photo img{width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid #d6dde6;background:#eef2f6}
+    .table-report .col-name{min-width:240px;font-size:12pt;font-weight:700;color:#0f172a}
+    .table-report .col-mini{text-align:center;white-space:nowrap}
+    .table-report .col-left{text-align:left}
+    .report-empty{padding:24px 10px;color:#667085;text-align:center}
+    .print-shell{display:none}
+    .print-shell.active{display:block}
+
+    .paper-page{width:210mm;min-height:297mm;margin:0 auto 10mm;background:#fff;color:#111827;position:relative;box-shadow:0 12px 40px rgba(15,23,42,.08)}
+        .paper-head{padding:10mm 12mm 6mm;border-bottom:2px solid #0f2747}
+    .paper-head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12mm}
+    .paper-brand{display:flex;align-items:flex-start;gap:10px}
+    .paper-brand img{width:34mm;max-height:16mm;object-fit:contain}
+    .paper-brand-text{display:flex;flex-direction:column;gap:2px}
+    .paper-brand-title{font-size:16pt;font-weight:800;line-height:1.1;color:#0f2747}
+    .paper-brand-sub{font-size:9pt;color:#475467}
+    .paper-page-tag{text-align:right;font-size:10pt;color:#475467;font-weight:700}
+    .paper-title{margin:8px 0 3px;font-size:15pt;font-weight:800;color:#0f172a}
+    .paper-subtitle{margin:0;font-size:10pt;color:#475467;line-height:1.45}
+    .paper-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:5mm 12mm 4mm}
+    .paper-summary-card{border:1px solid #dbe3ec;border-radius:12px;padding:8px 10px;background:#f8fbff}
+    .paper-summary-card .k{font-size:8.5pt;color:#475467;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+    .paper-summary-card .v{font-size:13pt;color:#101828;font-weight:800;margin-top:3px}
+    .paper-table-wrap{padding:0 12mm 9mm}
+    .paper-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10pt}
+    .paper-table thead th{background:#0f2747;color:#fff;font-weight:800;padding:8px 7px;border:1px solid #0a1b31}
+    .paper-table tbody td{padding:7px 7px;border:1px solid #d7dee8;color:#111827;vertical-align:middle}
+    .paper-table tbody tr:nth-child(even){background:#f7f9fc}
+    .paper-table .num{text-align:center;font-weight:800;width:10mm}
+    .paper-table .center{text-align:center}
+    .paper-table .name{font-size:12pt;font-weight:700;padding-left:8px}
+    .paper-table .photo{text-align:center;width:18mm}
+    .paper-table .photo img{width:13mm;height:13mm;border-radius:4mm;object-fit:cover;border:1px solid #d6dde6;background:#eef2f6}
+    .paper-foot{position:absolute;left:12mm;right:12mm;bottom:8mm;display:flex;justify-content:space-between;gap:10px;font-size:9pt;color:#475467;border-top:1px solid #d9e1ea;padding-top:3mm}
+    .paper-criteria{margin-top:4px;font-size:9.5pt;color:#344054}
+    .paper-criteria strong{color:#101828}
+
+    .student-page{width:210mm;min-height:297mm;margin:0 auto 10mm;background:#fff;position:relative;box-shadow:0 12px 40px rgba(15,23,42,.08)}
+    .student-head{padding:10mm 12mm 7mm;background:#0f2747;color:#fff}
+    .student-head-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .student-head img{width:34mm;max-height:15mm;object-fit:contain}
+    .student-head h1{margin:8px 0 3px;font-size:16pt;line-height:1.15}
+    .student-head p{margin:0;font-size:9.5pt;color:#d8e7ff}
+    .student-body{padding:8mm 12mm 10mm}
+    .student-grid{display:grid;grid-template-columns:minmax(0,1fr) 40mm;gap:8mm;align-items:start}
+    .student-photo{width:40mm;height:50mm;border:1px solid #d8e0ea;border-radius:12px;background:#f5f7fb;overflow:hidden}
+    .student-photo img{width:100%;height:100%;object-fit:cover}
+    .student-fields{display:grid;grid-template-columns:30mm 1fr 24mm 1fr;gap:3.2mm 4mm}
+    .student-fields .label{font-size:9.5pt;font-weight:700;color:#344054}
+    .student-fields .value{min-height:8mm;border:1px solid #d7dee8;border-radius:9px;background:#fff;padding:1.8mm 2.5mm;display:flex;align-items:center;color:#111827}
+    .student-fields .span2{grid-column:2 / span 3}
+    .student-section{margin-top:7mm}
+    .student-section h2{margin:0 0 3mm;font-size:11pt;text-transform:uppercase;letter-spacing:.04em;color:#1f2937}
+    .metric-grid-v2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4mm}
+    .metric-card-v2{border:1px solid #d7dee8;border-radius:12px;padding:3.5mm;background:#fff}
+    .metric-card-v2 .head{font-size:9pt;font-weight:800;color:#344054;margin-bottom:2mm}
+    .metric-card-v2 .bar{position:relative;height:11mm;border-radius:999px;background:#eff4f8;border:1px solid #d7dee8;overflow:hidden}
+    .metric-card-v2 .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#74c5cf,#5f8dff)}
+    .metric-card-v2 .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#182230}
+    .student-notes{min-height:28mm;border:1px solid #d7dee8;border-radius:12px;background:#fff;padding:4mm;white-space:pre-wrap;line-height:1.45}
+    .student-foot{position:absolute;left:12mm;right:12mm;bottom:8mm;display:flex;justify-content:space-between;gap:10px;font-size:9pt;color:#475467;border-top:1px solid #d9e1ea;padding-top:3mm}
+
+    @media (max-width:1080px){
+      .report-toolbar-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .paper-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:760px){
+      .report-toolbar-grid{grid-template-columns:1fr}
+      .paper-page,.student-page{width:100%;min-height:auto}
+      .paper-summary,.student-grid,.metric-grid-v2,.student-fields{grid-template-columns:1fr}
+      .student-fields .span2{grid-column:auto}
+    }
+
+    @media print{
+      @page{size:A4 portrait;margin:8mm}
+      body{background:#fff}
+      .topbar,.no-print,.screen-only,.toast-stack{display:none !important}
+      .container{max-width:none;padding:0}
+      .print-shell{display:block !important}
+      .paper-page,.student-page{box-shadow:none;margin:0;border:none;page-break-after:always}
+      .paper-page:last-child,.student-page:last-child{page-break-after:auto}
+      .paper-table{font-size:9.3pt}
+      .paper-table .name{font-size:11.5pt}
+      .student-head{padding:8mm 10mm 6mm}
+      .student-body{padding:6mm 10mm 8mm}
+      .student-fields{grid-template-columns:28mm 1fr 22mm 1fr}
+      .student-photo{width:36mm;height:46mm}
+      .paper-head{padding:8mm 10mm 5mm}
+      .paper-summary{padding:4mm 10mm 3mm}
+      .paper-table-wrap{padding:0 10mm 8mm}
+      .paper-foot,.student-foot{left:10mm;right:10mm;bottom:6mm}
+    }
+  </style>
 </head>
 <body>
   <div id="appNav"></div>
   <div class="container">
     <div id="toastArea" class="toast-stack"></div>
 
-    <div class="hero-mini">
+    <div class="hero-mini no-print">
       <div>
-        <h1 style="margin:0 0 6px;">Relatório para impressão</h1>
-        <div class="small-muted">Selecione um ou vários alunos. A impressão sai com um aluno por página.</div>
+        <h1 style="margin:0 0 6px;">Central de relatórios</h1>
+        <div class="small-muted">Relatórios em A4 com título dinâmico, numeração, zebra, filtros completos e opção com ou sem foto.</div>
       </div>
-      <div class="actions no-print">
+      <div class="actions">
         <button class="btn btn-secondary" id="btnSelectVisible" type="button">Selecionar visíveis</button>
+        <button class="btn btn-secondary" id="btnClearSelection" type="button">Limpar seleção</button>
         <button class="btn btn-primary" id="btnPrintSelected" type="button">Imprimir selecionados</button>
+        <button class="btn btn-primary" id="btnPrintFiltered" type="button">Imprimir filtrados</button>
       </div>
     </div>
 
     <div class="card no-print">
-      <div class="card-hd"><h2>Filtros</h2></div>
+      <div class="card-hd"><h2>Configuração do relatório</h2></div>
       <div class="card-bd">
-        <div class="filters">
-          <div class="field"><label>Busca</label><input id="f_q" placeholder="Nome, turma, telefone"></div>
-          <div class="field"><label>Status</label><select id="f_status"><option value="ACTIVE" selected>Ativos</option><option value="INACTIVE">Inativos</option><option value="">Todos</option></select></div>
-          <div class="field"><label>Turma</label><select id="f_class"><option value="">Todas</option></select></div>
-          <div class="field"><label>Data inicial</label><input type="date" id="f_from"></div>
-          <div class="field"><label>Data final</label><input type="date" id="f_to"></div>
+        <div class="report-toolbar-grid">
+          <div class="field">
+            <label>Modo de impressão</label>
+            <select id="f_mode">
+              <option value="list" selected>Listagem tabular</option>
+              <option value="individual">Ficha individual por aluno</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Busca</label>
+            <input id="f_q" placeholder="Nome, turma, telefone, curso">
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="f_status">
+              <option value="ACTIVE" selected>Ativos</option>
+              <option value="INACTIVE">Inativos</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Turma</label>
+            <select id="f_class"><option value="">Todas</option></select>
+          </div>
+          <div class="field">
+            <label>Sexo</label>
+            <select id="f_gender">
+              <option value="">Todos</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de bolsa</label>
+            <select id="f_plan"><option value="">Todos</option></select>
+          </div>
+          <div class="field">
+            <label>Idade mínima</label>
+            <input id="f_age_min" type="number" min="0" max="120" placeholder="Ex.: 15">
+          </div>
+          <div class="field">
+            <label>Idade máxima</label>
+            <input id="f_age_max" type="number" min="0" max="120" placeholder="Ex.: 16">
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input id="f_from" type="date">
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input id="f_to" type="date">
+          </div>
+          <div class="field">
+            <label>Ordenação</label>
+            <select id="f_sort">
+              <option value="name_asc" selected>Nome (A-Z)</option>
+              <option value="name_desc">Nome (Z-A)</option>
+              <option value="age_asc">Idade (menor para maior)</option>
+              <option value="age_desc">Idade (maior para menor)</option>
+              <option value="general_desc">Média geral (maior para menor)</option>
+              <option value="general_asc">Média geral (menor para maior)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Foto no relatório</label>
+            <div class="switch-row">
+              <input id="f_photo" type="checkbox" checked>
+              <span>Mostrar foto quando existir</span>
+            </div>
+          </div>
         </div>
-        <div class="actions" style="margin-top:12px;">
-          <button class="btn btn-secondary" id="btnReset" type="button">Limpar</button>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn btn-secondary" id="btnReset" type="button">Limpar filtros</button>
           <button class="btn btn-primary" id="btnReload" type="button">Atualizar</button>
         </div>
       </div>
     </div>
 
     <div class="card no-print">
-      <div class="card-hd"><h2>Resultado</h2><div class="small-muted" id="resultCount">0 registros</div></div>
+      <div class="card-hd">
+        <div>
+          <h2 style="margin-bottom:6px;">Pré-visualização</h2>
+          <div class="report-title-preview" id="reportTitlePreview">Relatório geral de alunos</div>
+          <p class="report-subtitle-preview" id="reportSubtitlePreview">Nenhum registro carregado.</p>
+        </div>
+        <div class="small-muted" id="resultCount">0 registros</div>
+      </div>
+      <div class="card-bd">
+        <div class="report-preview-meta" id="previewMeta"></div>
+      </div>
       <div class="card-bd table-wrap">
-        <table>
+        <table class="table-report">
           <thead>
             <tr>
-              <th><input type="checkbox" id="chkAll"></th>
-              <th>Aluno</th>
+              <th class="col-num"><input type="checkbox" id="chkAll"></th>
+              <th class="col-num">Nº</th>
+              <th class="col-photo" id="thPhoto">Foto</th>
+              <th>Nome</th>
+              <th>Idade</th>
+              <th>Sexo</th>
+              <th>Curso</th>
               <th>Turma</th>
+              <th>Bolsa</th>
               <th>Frequência</th>
               <th>Pontualidade</th>
               <th>Engajamento</th>
@@ -60,10 +250,11 @@
           </thead>
           <tbody id="tbody"></tbody>
         </table>
+        <div id="emptyState" class="report-empty" style="display:none;">Nenhum registro encontrado para os filtros informados.</div>
       </div>
     </div>
 
-    <div id="printArea" style="display:none;"></div>
+    <div id="printArea" class="print-shell"></div>
   </div>
 
   <script>
@@ -71,161 +262,495 @@
       window.UI.requireAuth();
       window.UI.mountNav('reports');
 
-      let rowsCache = [];
       const tbody = document.getElementById('tbody');
+      const printArea = document.getElementById('printArea');
+      const resultCount = document.getElementById('resultCount');
+      const emptyState = document.getElementById('emptyState');
+      const thPhoto = document.getElementById('thPhoto');
+      const previewMeta = document.getElementById('previewMeta');
+      const reportTitlePreview = document.getElementById('reportTitlePreview');
+      const reportSubtitlePreview = document.getElementById('reportSubtitlePreview');
 
-      function pct(v){ return `${Number(v || 0).toFixed(1).replace('.0','')}%`; }
+      let rowsCache = [];
+      let studentsOptionsCache = [];
+
+      function val(id){ return document.getElementById(id).value; }
+      function checked(id){ return document.getElementById(id).checked; }
+      function pct(v){ return Number(v || 0).toFixed(1).replace('.0', '') + '%'; }
+      function intOrBlank(v){ return v === '' || v === null || typeof v === 'undefined' ? '' : Number(v); }
+      function safeAvg(arr){ return arr.length ? arr.reduce((a,b) => a + Number(b || 0), 0) / arr.length : 0; }
+      function nowBR(){ return new Date().toLocaleString('pt-BR'); }
+      function escape(v){ return window.UI.escapeHtml(v == null ? '' : String(v)); }
+      function photoHtml(url, size){
+        const src = escape(url || window.APP_CONFIG.DEFAULT_PHOTO || '');
+        return `<img src="${src}" onerror="this.style.visibility='hidden'" style="width:${size};height:${size};object-fit:cover;border-radius:12px;border:1px solid #d6dde6;background:#eef2f6;">`;
+      }
 
       function currentFilters(){
         return {
-          q: document.getElementById('f_q').value.trim(),
-          status: document.getElementById('f_status').value,
-          class_name: document.getElementById('f_class').value,
-          date_from: document.getElementById('f_from').value,
-          date_to: document.getElementById('f_to').value
+          mode: val('f_mode'),
+          q: val('f_q').trim(),
+          status: val('f_status'),
+          class_name: val('f_class'),
+          gender: val('f_gender'),
+          plan_name: val('f_plan'),
+          age_min: val('f_age_min'),
+          age_max: val('f_age_max'),
+          date_from: val('f_from'),
+          date_to: val('f_to'),
+          sort: val('f_sort'),
+          with_photo: checked('f_photo')
         };
       }
 
-      function renderTable(rows){
-        document.getElementById('resultCount').textContent = `${rows.length} registros`;
-        tbody.innerHTML = rows.map(r => `
-          <tr>
-            <td><input type="checkbox" class="chkRow" data-id="${r.student_id}"></td>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <img class="avatar" src="${window.UI.escapeHtml(r.photo_url || window.APP_CONFIG.DEFAULT_PHOTO || '')}" onerror="this.style.visibility='hidden'">
-                <div>
-                  <a href="student.html?student_id=${encodeURIComponent(r.student_id)}" style="font-weight:800;">${window.UI.escapeHtml(r.name)}</a>
-                  <div class="small-muted">${window.UI.escapeHtml(r.plan_name || '')}</div>
-                </div>
-              </div>
-            </td>
-            <td>${window.UI.escapeHtml(r.class_name || '—')}</td>
-            <td>${window.UI.pctBar(r.metrics.FREQUENCIA)}</td>
-            <td>${window.UI.pctBar(r.metrics.PONTUALIDADE)}</td>
-            <td>${window.UI.pctBar(r.metrics.ENGAJAMENTO)}</td>
-            <td>${window.UI.pctBar(r.metrics.RENDIMENTO)}</td>
-            <td><strong>${pct(r.metrics.GERAL)}</strong></td>
-          </tr>
-        `).join('');
+      function apiFiltersFromCurrent(){
+        const f = currentFilters();
+        return {
+          q: f.q,
+          status: f.status,
+          class_name: f.class_name,
+          gender: f.gender,
+          plan_name: f.plan_name,
+          date_from: f.date_from,
+          date_to: f.date_to
+        };
       }
 
-      function printPageHtml(report){
-        const st = report.student;
-        const mt = report.metrics;
-        const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${window.UI.escapeHtml(window.APP_CONFIG.LOGO_URL)}">` : '';
-        function cell(label, value){
-          const pctValue = Math.max(0, Math.min(100, Number(value || 0)));
-          return `
-            <div class="metric-cell">
-              <div class="metric-head">${label}</div>
-              <div class="metric-box">
-                <div class="metric-fill" style="width:${pctValue}%"></div>
-                <div class="metric-value">${pctValue.toFixed(1).replace('.0','')}%</div>
-              </div>
-            </div>
-          `;
+      function buildCriteriaText(f){
+        const parts = [];
+        if (f.class_name) parts.push(`Turma: ${f.class_name}`);
+        if (f.gender) parts.push(`Sexo: ${f.gender}`);
+        if (f.plan_name) parts.push(`Bolsa: ${f.plan_name}`);
+        if (f.age_min && f.age_max) {
+          if (Number(f.age_min) === Number(f.age_max)) parts.push(`Idade: ${f.age_min} anos`);
+          else parts.push(`Idade: ${f.age_min} a ${f.age_max} anos`);
+        } else if (f.age_min) {
+          parts.push(`Idade mínima: ${f.age_min} anos`);
+        } else if (f.age_max) {
+          parts.push(`Idade máxima: ${f.age_max} anos`);
         }
-        return `
-          <div class="pdf-page" style="page-break-after:always;">
-            <div class="pdf-hero">
-              <div class="blob a"></div>
-              <div class="blob b"></div>
-              <div class="pdf-logo">${logoHtml}</div>
-              <div class="pdf-title">Cadastro<span style="font-weight:700">Pessoal</span></div>
-              <div class="pdf-brand">IAPE TRAINEE</div>
-              <div class="pdf-email">${window.UI.escapeHtml(window.APP_CONFIG.BRAND_EMAIL || 'iape.trainee@adventistas.org')}</div>
-            </div>
-            <div class="pdf-content">
-              <div class="pdf-top-grid">
-                <div>
-                  <div class="section-title">INFORMAÇÕES PESSOAIS</div>
-                  <div class="section-line"></div>
-                  <div class="pdf-fields">
-                    <div class="label">Nome Completo</div><div class="value span2">${window.UI.escapeHtml(st.name || '')}</div>
-                    <div class="label">Endereço</div><div class="value span2">${window.UI.escapeHtml(st.address || '')}</div>
-                    <div class="label">Data de Nascimento</div><div class="value">${window.UI.escapeHtml(st.birth_date_br || '')}</div>
-                    <div class="label">WhatsApp</div><div class="value">${window.UI.escapeHtml(st.phone_display || '')}</div>
-                    <div class="label">Curso</div><div class="value">${window.UI.escapeHtml(st.course_name || '')}</div>
-                    <div class="label">Turma</div><div class="value">${window.UI.escapeHtml(st.class_name || '')}</div>
-                    <div class="label">Gênero</div><div class="value">${window.UI.escapeHtml(st.gender || '')}</div>
-                    <div class="label">Tipo de Bolsa</div><div class="value">${window.UI.escapeHtml(st.plan_name || '')}</div>
-                    <div class="label">Idade</div><div class="value">${window.UI.escapeHtml(String(st.age || ''))}</div>
-                  </div>
-                </div>
-                <div><div class="photo-slot">${st.photo_url ? `<img src="${window.UI.escapeHtml(st.photo_url)}">` : ''}</div></div>
-              </div>
-              <div class="report-section report-section-metrics">
-                <div class="section-title">Ocorrências</div>
-                <div class="metric-grid">
-                  ${cell('FREQUÊNCIA', mt.FREQUENCIA)}
-                  ${cell('PONTUALIDADE', mt.PONTUALIDADE)}
-                  ${cell('ENGAJAMENTO', mt.ENGAJAMENTO)}
-                  ${cell('RENDIMENTO', mt.RENDIMENTO)}
-                </div>
-              </div>
-              <div class="report-section report-section-notes">
-                <div class="section-title">Observações:</div>
-                <div class="notes-box">${window.UI.escapeHtml(st.notes || '')}</div>
-              </div>
-            </div>
-          </div>
-        `;
+        if (f.status) parts.push(`Status: ${f.status === 'ACTIVE' ? 'Ativos' : 'Inativos'}`);
+        if (f.date_from || f.date_to) parts.push(`Período: ${f.date_from || '...'} até ${f.date_to || '...'}`);
+        if (f.q) parts.push(`Busca: ${f.q}`);
+        return parts.length ? parts.join(' • ') : 'Sem filtros específicos';
       }
 
-      async function loadClasses(){
+      function buildReportTitle(f, count){
+        const singular = count === 1;
+        if (f.age_min && f.age_max) {
+          const min = Number(f.age_min);
+          const max = Number(f.age_max);
+          if (!isNaN(min) && !isNaN(max)) {
+            if (min === max) return singular ? `Relatório de aluno de ${min} anos` : `Relatório de alunos de ${min} anos`;
+            return `Relatório de alunos de ${min} a ${max} anos`;
+          }
+        }
+        if (f.plan_name && !f.class_name && !f.gender) return `Relatório de alunos do tipo de bolsa ${f.plan_name}`;
+        if (f.class_name && !f.plan_name && !f.gender) return `Relatório de alunos da turma ${f.class_name}`;
+        if (f.gender && !f.class_name && !f.plan_name) return `Relatório de alunos do sexo ${f.gender}`;
+
+        const pieces = [];
+        if (f.class_name) pieces.push(`turma ${f.class_name}`);
+        if (f.plan_name) pieces.push(`bolsa ${f.plan_name}`);
+        if (f.gender) pieces.push(`sexo ${f.gender}`);
+        if (pieces.length) return `Relatório de alunos por ${pieces.join(' • ')}`;
+        return 'Relatório geral de alunos';
+      }
+
+      function passesAgeFilter(row, f){
+        const age = Number(row.age || '');
+        const min = f.age_min === '' ? null : Number(f.age_min);
+        const max = f.age_max === '' ? null : Number(f.age_max);
+        if (isNaN(age)) return min == null && max == null;
+        if (min != null && !isNaN(min) && age < min) return false;
+        if (max != null && !isNaN(max) && age > max) return false;
+        return true;
+      }
+
+      function sortRows(rows, sortKey){
+        const arr = rows.slice();
+        const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
+        arr.sort((a, b) => {
+          switch (sortKey) {
+            case 'name_desc': return collator.compare(String(b.name || ''), String(a.name || ''));
+            case 'age_asc': return Number(a.age || 0) - Number(b.age || 0) || collator.compare(String(a.name || ''), String(b.name || ''));
+            case 'age_desc': return Number(b.age || 0) - Number(a.age || 0) || collator.compare(String(a.name || ''), String(b.name || ''));
+            case 'general_desc': return Number(b.metrics?.GERAL || 0) - Number(a.metrics?.GERAL || 0) || collator.compare(String(a.name || ''), String(b.name || ''));
+            case 'general_asc': return Number(a.metrics?.GERAL || 0) - Number(b.metrics?.GERAL || 0) || collator.compare(String(a.name || ''), String(b.name || ''));
+            case 'name_asc':
+            default:
+              return collator.compare(String(a.name || ''), String(b.name || ''));
+          }
+        });
+        return arr;
+      }
+
+      function mergeStudentAndMetrics(students, metricsRows){
+        const map = new Map((metricsRows || []).map(r => [String(r.student_id), r]));
+        return (students || []).map(st => {
+          const m = map.get(String(st.student_id)) || { metrics: { FREQUENCIA: 0, PONTUALIDADE: 0, ENGAJAMENTO: 0, RENDIMENTO: 0, GERAL: 0 } };
+          return {
+            student_id: st.student_id,
+            name: st.name,
+            age: st.age,
+            birth_date: st.birth_date,
+            birth_date_br: st.birth_date_br,
+            gender: st.gender,
+            address: st.address,
+            course_name: st.course_name,
+            class_name: st.class_name,
+            plan_name: st.plan_name,
+            phone_display: st.phone_display,
+            whatsapp_link: st.whatsapp_link,
+            photo_url: st.photo_url,
+            notes: st.notes,
+            status: st.status,
+            metrics: m.metrics || { FREQUENCIA: 0, PONTUALIDADE: 0, ENGAJAMENTO: 0, RENDIMENTO: 0, GERAL: 0 }
+          };
+        });
+      }
+
+      function updatePreviewHeader(rows){
+        const f = currentFilters();
+        const title = buildReportTitle(f, rows.length);
+        const criteriaText = buildCriteriaText(f);
+        const avgGeneral = safeAvg(rows.map(r => Number(r.metrics?.GERAL || 0)));
+        const avgFreq = safeAvg(rows.map(r => Number(r.metrics?.FREQUENCIA || 0)));
+
+        reportTitlePreview.textContent = title;
+        reportSubtitlePreview.textContent = `${rows.length} registro(s) • Média geral ${pct(avgGeneral)} • Frequência média ${pct(avgFreq)}`;
+        resultCount.textContent = `${rows.length} registros`;
+
+        previewMeta.innerHTML = [
+          `<div class="mini-pill"><strong>Modo:</strong> ${f.mode === 'individual' ? 'Ficha individual' : 'Listagem tabular'}</div>`,
+          `<div class="mini-pill"><strong>Fotos:</strong> ${f.with_photo ? 'Sim' : 'Não'}</div>`,
+          `<div class="mini-pill"><strong>Critérios:</strong> ${escape(criteriaText)}</div>`
+        ].join('');
+      }
+
+      function renderTable(rows){
+        updatePreviewHeader(rows);
+        const withPhoto = checked('f_photo');
+        thPhoto.style.display = withPhoto ? '' : 'none';
+
+        if (!rows.length) {
+          tbody.innerHTML = '';
+          emptyState.style.display = 'block';
+          return;
+        }
+        emptyState.style.display = 'none';
+
+        tbody.innerHTML = rows.map((r, idx) => {
+          const photoCell = withPhoto ? `<td class="col-photo">${photoHtml(r.photo_url, '44px')}</td>` : '';
+          return `
+            <tr>
+              <td class="col-num"><input type="checkbox" class="chkRow" data-id="${escape(r.student_id)}"></td>
+              <td class="col-num">${idx + 1}</td>
+              ${photoCell}
+              <td class="col-left col-name">
+                <a href="student.html?student_id=${encodeURIComponent(r.student_id)}" style="font-weight:800;">${escape(r.name)}</a>
+              </td>
+              <td class="col-mini">${escape(String(r.age || '—'))}</td>
+              <td class="col-mini">${escape(r.gender || '—')}</td>
+              <td class="col-left">${escape(r.course_name || '—')}</td>
+              <td class="col-mini">${escape(r.class_name || '—')}</td>
+              <td class="col-left">${escape(r.plan_name || '—')}</td>
+              <td class="col-mini">${pct(r.metrics?.FREQUENCIA)}</td>
+              <td class="col-mini">${pct(r.metrics?.PONTUALIDADE)}</td>
+              <td class="col-mini">${pct(r.metrics?.ENGAJAMENTO)}</td>
+              <td class="col-mini">${pct(r.metrics?.RENDIMENTO)}</td>
+              <td class="col-mini"><strong>${pct(r.metrics?.GERAL)}</strong></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      async function loadOptions(){
         try {
-          const data = await window.Api.apiPost('listClasses', {});
-          const sel = document.getElementById('f_class');
-          data.classes.forEach(c => {
+          const [classesData, studentsData] = await Promise.all([
+            window.Api.apiPost('listClasses', {}),
+            window.Api.apiPost('listStudents', { filters: { status: '' } })
+          ]);
+          studentsOptionsCache = studentsData.students || [];
+
+          const classSel = document.getElementById('f_class');
+          (classesData.classes || []).forEach(c => {
             const opt = document.createElement('option');
             opt.value = c;
             opt.textContent = c;
-            sel.appendChild(opt);
+            classSel.appendChild(opt);
           });
-        } catch (_) {}
+
+          const planSel = document.getElementById('f_plan');
+          const plans = Array.from(new Set(studentsOptionsCache.map(s => String(s.plan_name || '').trim()).filter(Boolean))).sort((a,b) => a.localeCompare(b, 'pt-BR'));
+          plans.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            planSel.appendChild(opt);
+          });
+        } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
       }
 
       async function loadRows(){
         try {
-          const data = await window.Api.apiPost('listReportRows', { filters: currentFilters() });
-          rowsCache = data.rows || [];
+          const f = currentFilters();
+          const apiFilters = apiFiltersFromCurrent();
+          const [studentsData, metricsData] = await Promise.all([
+            window.Api.apiPost('listStudents', { filters: apiFilters }),
+            window.Api.apiPost('listReportRows', { filters: apiFilters })
+          ]);
+
+          let rows = mergeStudentAndMetrics(studentsData.students || [], metricsData.rows || []);
+          rows = rows.filter(r => passesAgeFilter(r, f));
+          rows = sortRows(rows, f.sort);
+          rowsCache = rows;
           renderTable(rowsCache);
         } catch (err) {
           window.UI.toast(err.message || String(err), 'err');
         }
       }
 
-      async function printSelected(){
-        const ids = Array.from(document.querySelectorAll('.chkRow:checked')).map(el => el.dataset.id);
-        if (!ids.length) return window.UI.toast('Selecione pelo menos um aluno.', 'err');
+      function getSelectedRows(){
+        const ids = new Set(Array.from(document.querySelectorAll('.chkRow:checked')).map(el => String(el.dataset.id)));
+        return rowsCache.filter(r => ids.has(String(r.student_id)));
+      }
+
+      function buildSummaryCards(rows){
+        const avgGeneral = safeAvg(rows.map(r => Number(r.metrics?.GERAL || 0)));
+        const avgFreq = safeAvg(rows.map(r => Number(r.metrics?.FREQUENCIA || 0)));
+        const male = rows.filter(r => String(r.gender || '').toLowerCase() === 'masculino').length;
+        const female = rows.filter(r => String(r.gender || '').toLowerCase() === 'feminino').length;
+        return `
+          <div class="paper-summary">
+            <div class="paper-summary-card"><div class="k">Total de registros</div><div class="v">${rows.length}</div></div>
+            <div class="paper-summary-card"><div class="k">Média geral</div><div class="v">${pct(avgGeneral)}</div></div>
+            <div class="paper-summary-card"><div class="k">Frequência média</div><div class="v">${pct(avgFreq)}</div></div>
+            <div class="paper-summary-card"><div class="k">Sexo</div><div class="v">M ${male} • F ${female}</div></div>
+          </div>
+        `;
+      }
+
+      function listPageHtml(pageRows, pageIndex, totalPages, allRows, startNumber){
+        const f = currentFilters();
+        const title = buildReportTitle(f, allRows.length);
+        const criteriaText = buildCriteriaText(f);
+        const withPhoto = checked('f_photo');
+        const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${escape(window.APP_CONFIG.LOGO_URL)}">` : '';
+        const photoHeader = withPhoto ? '<th style="width:18mm;">Foto</th>' : '';
+        const photoCell = (r) => withPhoto ? `<td class="photo">${photoHtml(r.photo_url, '13mm')}</td>` : '';
+        const summaryHtml = pageIndex === 1 ? buildSummaryCards(allRows) : '<div style="height:2mm;"></div>';
+
+        return `
+          <section class="paper-page">
+            <div class="paper-head">
+              <div class="paper-head-top">
+                <div class="paper-brand">
+                  ${logoHtml}
+                  <div class="paper-brand-text">
+                    <div class="paper-brand-title">IAPE Trainee</div>
+                    <div class="paper-brand-sub">Relatório acadêmico e administrativo</div>
+                  </div>
+                </div>
+                <div class="paper-page-tag">Página ${pageIndex} de ${totalPages}</div>
+              </div>
+              <div class="paper-title">${escape(title)}</div>
+              <p class="paper-subtitle">Gerado em ${escape(nowBR())}</p>
+              <div class="paper-criteria"><strong>Critérios:</strong> ${escape(criteriaText)}</div>
+            </div>
+            ${summaryHtml}
+            <div class="paper-table-wrap">
+              <table class="paper-table">
+                <thead>
+                  <tr>
+                    <th style="width:10mm;">Nº</th>
+                    ${photoHeader}
+                    <th style="width:48mm;">Nome</th>
+                    <th style="width:12mm;">Idade</th>
+                    <th style="width:18mm;">Sexo</th>
+                    <th style="width:18mm;">Curso</th>
+                    <th style="width:14mm;">Turma</th>
+                    <th style="width:26mm;">Tipo de bolsa</th>
+                    <th style="width:14mm;">Frequência</th>
+                    <th style="width:14mm;">Pontualidade</th>
+                    <th style="width:14mm;">Engajamento</th>
+                    <th style="width:14mm;">Rendimento</th>
+                    <th style="width:12mm;">Geral</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pageRows.map((r, i) => `
+                    <tr>
+                      <td class="num">${startNumber + i}</td>
+                      ${photoCell(r)}
+                      <td class="name">${escape(r.name)}</td>
+                      <td class="center">${escape(String(r.age || '—'))}</td>
+                      <td class="center">${escape(r.gender || '—')}</td>
+                      <td class="center">${escape(r.course_name || '—')}</td>
+                      <td class="center">${escape(r.class_name || '—')}</td>
+                      <td>${escape(r.plan_name || '—')}</td>
+                      <td class="center">${pct(r.metrics?.FREQUENCIA)}</td>
+                      <td class="center">${pct(r.metrics?.PONTUALIDADE)}</td>
+                      <td class="center">${pct(r.metrics?.ENGAJAMENTO)}</td>
+                      <td class="center">${pct(r.metrics?.RENDIMENTO)}</td>
+                      <td class="center"><strong>${pct(r.metrics?.GERAL)}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="paper-foot">
+              <div>${escape(title)}</div>
+              <div>${allRows.length} registro(s)</div>
+            </div>
+          </section>
+        `;
+      }
+
+      function buildListPrintHtml(rows){
+        const perPage = checked('f_photo') ? 11 : 14;
+        const pages = [];
+        for (let i = 0; i < rows.length; i += perPage) pages.push(rows.slice(i, i + perPage));
+        return pages.map((slice, idx) => listPageHtml(slice, idx + 1, pages.length, rows, idx * perPage + 1)).join('');
+      }
+
+      function metricCard(label, value){
+        const pctValue = Math.max(0, Math.min(100, Number(value || 0)));
+        return `
+          <div class="metric-card-v2">
+            <div class="head">${label}</div>
+            <div class="bar">
+              <div class="fill" style="width:${pctValue}%;"></div>
+              <div class="val">${pctValue.toFixed(1).replace('.0','')}%</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function individualPageHtml(report, pageIndex, totalPages){
+        const st = report.student || {};
+        const mt = report.metrics || {};
+        const f = currentFilters();
+        const title = buildReportTitle(f, totalPages);
+        const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${escape(window.APP_CONFIG.LOGO_URL)}">` : '';
+        const photoBlock = checked('f_photo') ? `<div class="student-photo">${st.photo_url ? `<img src="${escape(st.photo_url)}">` : ''}</div>` : '';
+        return `
+          <section class="student-page">
+            <div class="student-head">
+              <div class="student-head-top">
+                <div>${logoHtml}</div>
+                <div style="text-align:right;font-size:10pt;font-weight:700;">Página ${pageIndex} de ${totalPages}</div>
+              </div>
+              <h1>${escape(title)}</h1>
+              <p>${escape(st.name || '')}</p>
+            </div>
+            <div class="student-body">
+              <div class="student-grid">
+                <div>
+                  <div class="student-fields">
+                    <div class="label">Nome</div><div class="value span2">${escape(st.name || '')}</div>
+                    <div class="label">Endereço</div><div class="value span2">${escape(st.address || '')}</div>
+                    <div class="label">Nascimento</div><div class="value">${escape(st.birth_date_br || '')}</div>
+                    <div class="label">Idade</div><div class="value">${escape(String(st.age || ''))}</div>
+                    <div class="label">Sexo</div><div class="value">${escape(st.gender || '')}</div>
+                    <div class="label">WhatsApp</div><div class="value">${escape(st.phone_display || '')}</div>
+                    <div class="label">Curso</div><div class="value">${escape(st.course_name || '')}</div>
+                    <div class="label">Turma</div><div class="value">${escape(st.class_name || '')}</div>
+                    <div class="label">Bolsa</div><div class="value span2">${escape(st.plan_name || '')}</div>
+                  </div>
+                </div>
+                <div>${photoBlock}</div>
+              </div>
+
+              <div class="student-section">
+                <h2>Indicadores</h2>
+                <div class="metric-grid-v2">
+                  ${metricCard('Frequência', mt.FREQUENCIA)}
+                  ${metricCard('Pontualidade', mt.PONTUALIDADE)}
+                  ${metricCard('Engajamento', mt.ENGAJAMENTO)}
+                  ${metricCard('Rendimento', mt.RENDIMENTO)}
+                </div>
+              </div>
+
+              <div class="student-section">
+                <h2>Observações</h2>
+                <div class="student-notes">${escape(st.notes || '')}</div>
+              </div>
+            </div>
+            <div class="student-foot">
+              <div>${escape(title)}</div>
+              <div>Gerado em ${escape(nowBR())}</div>
+            </div>
+          </section>
+        `;
+      }
+
+      async function buildIndividualPrintHtml(rows){
+        const reports = await Promise.all(rows.map(r => window.Api.apiPost('getStudentReport', {
+          student_id: r.student_id,
+          filters: {
+            date_from: val('f_from'),
+            date_to: val('f_to')
+          }
+        })));
+        return reports.map((rep, idx) => individualPageHtml(rep, idx + 1, reports.length)).join('');
+      }
+
+      async function printRows(rows){
+        if (!rows.length) return window.UI.toast('Nenhum aluno encontrado para impressão.', 'err');
         try {
-          const reports = await Promise.all(ids.map(student_id => window.Api.apiPost('getStudentReport', { student_id, filters: currentFilters() })));
-          const area = document.getElementById('printArea');
-          area.innerHTML = reports.map(printPageHtml).join('');
-          area.style.display = 'block';
+          const mode = val('f_mode');
+          printArea.classList.add('active');
+          if (mode === 'individual') {
+            document.body.classList.remove('printing-list');
+            document.body.classList.add('printing-individual');
+            printArea.innerHTML = await buildIndividualPrintHtml(rows);
+          } else {
+            document.body.classList.remove('printing-individual');
+            document.body.classList.add('printing-list');
+            printArea.innerHTML = buildListPrintHtml(rows);
+          }
           window.print();
-          setTimeout(() => { area.style.display = 'none'; }, 150);
+          setTimeout(() => {
+            printArea.classList.remove('active');
+            printArea.innerHTML = '';
+            document.body.classList.remove('printing-list', 'printing-individual');
+          }, 200);
         } catch (err) {
+          printArea.classList.remove('active');
+          document.body.classList.remove('printing-list', 'printing-individual');
           window.UI.toast(err.message || String(err), 'err');
         }
       }
 
+      function clearSelection(){
+        document.querySelectorAll('.chkRow').forEach(el => { el.checked = false; });
+        const master = document.getElementById('chkAll');
+        if (master) master.checked = false;
+      }
+
       document.getElementById('btnReload').addEventListener('click', loadRows);
       document.getElementById('btnReset').addEventListener('click', () => {
-        document.getElementById('f_q').value = '';
+        ['f_q','f_class','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('f_mode').value = 'list';
         document.getElementById('f_status').value = 'ACTIVE';
-        document.getElementById('f_class').value = '';
-        document.getElementById('f_from').value = '';
-        document.getElementById('f_to').value = '';
+        document.getElementById('f_sort').value = 'name_asc';
+        document.getElementById('f_photo').checked = true;
+        clearSelection();
         loadRows();
       });
-      document.getElementById('btnPrintSelected').addEventListener('click', printSelected);
-      document.getElementById('btnSelectVisible').addEventListener('click', () => document.querySelectorAll('.chkRow').forEach(el => el.checked = true));
-      document.getElementById('chkAll').addEventListener('change', (ev) => document.querySelectorAll('.chkRow').forEach(el => el.checked = ev.target.checked));
-      ['f_q','f_status','f_class','f_from','f_to'].forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadRows));
+      document.getElementById('btnSelectVisible').addEventListener('click', () => document.querySelectorAll('.chkRow').forEach(el => { el.checked = true; }));
+      document.getElementById('btnClearSelection').addEventListener('click', clearSelection);
+      document.getElementById('btnPrintSelected').addEventListener('click', () => printRows(getSelectedRows()));
+      document.getElementById('btnPrintFiltered').addEventListener('click', () => printRows(rowsCache.slice()));
+      document.getElementById('chkAll').addEventListener('change', (ev) => document.querySelectorAll('.chkRow').forEach(el => { el.checked = ev.target.checked; }));
+      ['f_mode','f_q','f_status','f_class','f_gender','f_plan','f_age_min','f_age_max','f_from','f_to','f_sort','f_photo'].forEach(id => {
+        document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadRows);
+      });
 
-      await loadClasses();
+      await loadOptions();
       await loadRows();
     })();
   </script>
