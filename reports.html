@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relatórios • IAPE Trainee</title>
+  <title>Relatórios - IAPE Trainee</title>
   <link rel="stylesheet" href="assets/app.css">
   <script src="assets/config.js"></script>
   <script src="assets/api.js"></script>
@@ -24,7 +24,7 @@
     .table-report .col-num{width:52px;text-align:center;font-weight:800}
     .table-report .col-photo{width:72px;text-align:center}
     .table-report .col-photo img{width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid #d6dde6;background:#eef2f6}
-    .table-report .col-name{min-width:240px;font-size:12pt;font-weight:700;color:#0f172a}
+    .table-report .col-name{min-width:260px;font-size:12pt;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .table-report .col-mini{text-align:center;white-space:nowrap}
     .table-report .col-left{text-align:left}
     .report-empty{padding:24px 10px;color:#667085;text-align:center}
@@ -53,12 +53,17 @@
     .paper-table tbody tr:nth-child(even){background:#f7f9fc}
     .paper-table .num{text-align:center;font-weight:800;width:10mm}
     .paper-table .center{text-align:center}
-    .paper-table .name{font-size:12pt;font-weight:700;padding-left:8px}
+    .paper-table .name{font-size:12pt;font-weight:700;padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .paper-table .photo{text-align:center;width:18mm}
     .paper-table .photo img{width:13mm;height:13mm;border-radius:4mm;object-fit:cover;border:1px solid #d6dde6;background:#eef2f6}
     .paper-foot{position:absolute;left:12mm;right:12mm;bottom:8mm;display:flex;justify-content:space-between;gap:10px;font-size:9pt;color:#475467;border-top:1px solid #d9e1ea;padding-top:3mm}
     .paper-criteria{margin-top:4px;font-size:9.5pt;color:#344054}
     .paper-criteria strong{color:#101828}
+    .paper-info-line{margin-top:3mm;font-size:9.5pt;color:#344054;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+    .paper-info-line .item{white-space:nowrap}
+    .paper-info-line .k{font-weight:800;color:#101828}
+    .paper-info-line .v{font-weight:400;color:#111827}
+    .paper-info-line .sep{opacity:.65}
 
     .student-page{width:210mm;min-height:297mm;margin:0 auto 10mm;background:#fff;position:relative;box-shadow:0 12px 40px rgba(15,23,42,.08)}
     .student-head{padding:10mm 12mm 7mm;background:#0f2747;color:#fff}
@@ -241,11 +246,6 @@
               <th>Curso</th>
               <th>Turma</th>
               <th>Bolsa</th>
-              <th>Frequência</th>
-              <th>Pontualidade</th>
-              <th>Engajamento</th>
-              <th>Rendimento</th>
-              <th>Geral</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -281,6 +281,13 @@
       function safeAvg(arr){ return arr.length ? arr.reduce((a,b) => a + Number(b || 0), 0) / arr.length : 0; }
       function nowBR(){ return new Date().toLocaleString('pt-BR'); }
       function escape(v){ return window.UI.escapeHtml(v == null ? '' : String(v)); }
+      function genderShort(g){
+        const v = String(g || '').toLowerCase();
+        if (v === 'masculino') return 'M';
+        if (v === 'feminino') return 'F';
+        return '—';
+      }
+
       function photoHtml(url, size){
         const src = escape(url || window.APP_CONFIG.DEFAULT_PHOTO || '');
         return `<img src="${src}" onerror="this.style.visibility='hidden'" style="width:${size};height:${size};object-fit:cover;border-radius:12px;border:1px solid #d6dde6;background:#eef2f6;">`;
@@ -451,15 +458,10 @@
                 <a href="student.html?student_id=${encodeURIComponent(r.student_id)}" style="font-weight:800;">${escape(r.name)}</a>
               </td>
               <td class="col-mini">${escape(String(r.age || '—'))}</td>
-              <td class="col-mini">${escape(r.gender || '—')}</td>
+              <td class="col-mini">${genderShort(r.gender)}</td>
               <td class="col-left">${escape(r.course_name || '—')}</td>
               <td class="col-mini">${escape(r.class_name || '—')}</td>
               <td class="col-left">${escape(r.plan_name || '—')}</td>
-              <td class="col-mini">${pct(r.metrics?.FREQUENCIA)}</td>
-              <td class="col-mini">${pct(r.metrics?.PONTUALIDADE)}</td>
-              <td class="col-mini">${pct(r.metrics?.ENGAJAMENTO)}</td>
-              <td class="col-mini">${pct(r.metrics?.RENDIMENTO)}</td>
-              <td class="col-mini"><strong>${pct(r.metrics?.GERAL)}</strong></td>
             </tr>
           `;
         }).join('');
@@ -524,14 +526,18 @@
         const male = rows.filter(r => String(r.gender || '').toLowerCase() === 'masculino').length;
         const female = rows.filter(r => String(r.gender || '').toLowerCase() === 'feminino').length;
         return `
-          <div class="paper-summary">
-            <div class="paper-summary-card"><div class="k">Total de registros</div><div class="v">${rows.length}</div></div>
-            <div class="paper-summary-card"><div class="k">Média geral</div><div class="v">${pct(avgGeneral)}</div></div>
-            <div class="paper-summary-card"><div class="k">Frequência média</div><div class="v">${pct(avgFreq)}</div></div>
-            <div class="paper-summary-card"><div class="k">Sexo</div><div class="v">M ${male} • F ${female}</div></div>
+          <div class=\"paper-info-line\">
+            <span class=\"item\"><span class=\"k\">Total de registros:</span> <span class=\"v\">${rows.length}</span></span>
+            <span class=\"sep\">|</span>
+            <span class=\"item\"><span class=\"k\">Média geral:</span> <span class=\"v\">${pct(avgGeneral)}</span></span>
+            <span class=\"sep\">|</span>
+            <span class=\"item\"><span class=\"k\">Frequência média:</span> <span class=\"v\">${pct(avgFreq)}</span></span>
+            <span class=\"sep\">|</span>
+            <span class=\"item\"><span class=\"k\">Sexo:</span> <span class=\"v\">M ${male} • F ${female}</span></span>
           </div>
         `;
       }
+
 
       function listPageHtml(pageRows, pageIndex, totalPages, allRows, startNumber){
         const f = currentFilters();
@@ -541,7 +547,6 @@
         const logoHtml = window.APP_CONFIG.LOGO_URL ? `<img src="${escape(window.APP_CONFIG.LOGO_URL)}">` : '';
         const photoHeader = withPhoto ? '<th style="width:18mm;">Foto</th>' : '';
         const photoCell = (r) => withPhoto ? `<td class="photo">${photoHtml(r.photo_url, '13mm')}</td>` : '';
-        const summaryHtml = pageIndex === 1 ? buildSummaryCards(allRows) : '<div style="height:2mm;"></div>';
 
         return `
           <section class="paper-page">
@@ -559,25 +564,20 @@
               <div class="paper-title">${escape(title)}</div>
               <p class="paper-subtitle">Gerado em ${escape(nowBR())}</p>
               <div class="paper-criteria"><strong>Critérios:</strong> ${escape(criteriaText)}</div>
+              ${buildSummaryCards(allRows)}
             </div>
-            ${summaryHtml}
             <div class="paper-table-wrap">
               <table class="paper-table">
                 <thead>
                   <tr>
                     <th style="width:10mm;">Nº</th>
                     ${photoHeader}
-                    <th style="width:48mm;">Nome</th>
+                    <th style="width:78mm;">Nome</th>
                     <th style="width:12mm;">Idade</th>
-                    <th style="width:18mm;">Sexo</th>
-                    <th style="width:18mm;">Curso</th>
-                    <th style="width:14mm;">Turma</th>
-                    <th style="width:26mm;">Tipo de bolsa</th>
-                    <th style="width:14mm;">Frequência</th>
-                    <th style="width:14mm;">Pontualidade</th>
-                    <th style="width:14mm;">Engajamento</th>
-                    <th style="width:14mm;">Rendimento</th>
-                    <th style="width:12mm;">Geral</th>
+                    <th style="width:10mm;">Sexo</th>
+                    <th style="width:22mm;">Curso</th>
+                    <th style="width:12mm;">Turma</th>
+                    <th style="width:35mm;">Bolsa</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -587,15 +587,10 @@
                       ${photoCell(r)}
                       <td class="name">${escape(r.name)}</td>
                       <td class="center">${escape(String(r.age || '—'))}</td>
-                      <td class="center">${escape(r.gender || '—')}</td>
+                      <td class="center">${genderShort(r.gender)}</td>
                       <td class="center">${escape(r.course_name || '—')}</td>
                       <td class="center">${escape(r.class_name || '—')}</td>
                       <td>${escape(r.plan_name || '—')}</td>
-                      <td class="center">${pct(r.metrics?.FREQUENCIA)}</td>
-                      <td class="center">${pct(r.metrics?.PONTUALIDADE)}</td>
-                      <td class="center">${pct(r.metrics?.ENGAJAMENTO)}</td>
-                      <td class="center">${pct(r.metrics?.RENDIMENTO)}</td>
-                      <td class="center"><strong>${pct(r.metrics?.GERAL)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -610,7 +605,7 @@
       }
 
       function buildListPrintHtml(rows){
-        const perPage = checked('f_photo') ? 11 : 14;
+        const perPage = checked('f_photo') ? 20 : 26;
         const pages = [];
         for (let i = 0; i < rows.length; i += perPage) pages.push(rows.slice(i, i + perPage));
         return pages.map((slice, idx) => listPageHtml(slice, idx + 1, pages.length, rows, idx * perPage + 1)).join('');
