@@ -23,6 +23,7 @@
         <button class="btn btn-secondary" type="button" id="btnBack">Voltar</button>
         <button class="btn btn-secondary" type="button" id="btnEdit">Editar</button>
         <button class="btn btn-primary" type="button" id="btnSave">Salvar</button>
+        <button class="btn btn-danger" type="button" id="btnDelete">Excluir aluno</button>
         <button class="btn btn-secondary" type="button" id="btnPrint">Imprimir</button>
       </div>
     </div>
@@ -187,6 +188,7 @@
       document.getElementById('btnPrint').addEventListener('click', () => window.print());
       document.getElementById('btnEdit').addEventListener('click', () => { if (!canEdit) return; editing = !editing; applyEditMode(); });
       document.getElementById('btnSave').addEventListener('click', saveStudent);
+      document.getElementById('btnDelete').addEventListener('click', deleteStudent);
       document.getElementById('st_photo').addEventListener('input', () => refreshPhoto(document.getElementById('st_photo').value));
       document.getElementById('st_birth_ui').addEventListener('blur', updateAge);
       courseEl.addEventListener('change', syncClassFromCourse);
@@ -264,6 +266,7 @@
         document.getElementById('st_notes').disabled = !editing;
         document.getElementById('btnEdit').style.display = canEdit && currentStudentId ? 'inline-block' : 'none';
         document.getElementById('btnSave').style.display = canEdit ? 'inline-block' : 'none';
+        document.getElementById('btnDelete').style.display = canEdit && currentStudentId ? 'inline-block' : 'none';
         document.getElementById('scoreCards').style.display = canEdit ? 'grid' : 'none';
         document.querySelectorAll('.btnAddScore, .score-inline input, [id^="date_"], [id^="note_"]').forEach(el => el.disabled = !canEdit);
       }
@@ -392,6 +395,28 @@
           window.UI.toast('Cadastro salvo.');
           if (isNew && !studentId) history.replaceState({}, '', 'student.html?student_id=' + encodeURIComponent(currentStudentId));
         } catch (err) {
+          window.UI.toast(err.message || String(err), 'err');
+        }
+      }
+
+      async function deleteStudent(){
+        if (!canEdit || !currentStudentId) return;
+        const name = document.getElementById('st_name').value.trim() || 'este aluno';
+        const ok = confirm(`Excluir ${name} da planilha?\n\nEsta ação remove o cadastro e ele não aparecerá mais nas listas e relatórios.`);
+        if (!ok) return;
+
+        const btn = document.getElementById('btnDelete');
+        const oldText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Excluindo...';
+
+        try {
+          await window.Api.apiPost('deleteStudent', { student_id: currentStudentId });
+          window.UI.toast('Aluno excluído.');
+          setTimeout(() => window.location.href = 'students.html', 500);
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = oldText;
           window.UI.toast(err.message || String(err), 'err');
         }
       }

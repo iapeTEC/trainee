@@ -87,11 +87,14 @@
 
   <script>
     (async function(){
-      window.UI.requireAuth();
+      const user = window.UI.requireAuth();
       window.UI.mountNav('students');
 
       const tbody = document.getElementById('tbody');
       const fields = ['f_q','f_status','f_class','f_plan'];
+      const canEdit = String(user.role || '').toUpperCase() === 'EDITOR';
+      let loadSeq = 0;
+      let searchTimer = null;
 
       function rowPhoto(url){
         return `<img class="avatar" src="${window.UI.escapeHtml(url || window.APP_CONFIG.DEFAULT_PHOTO || '')}" onerror="this.style.visibility='hidden'">`;
@@ -111,6 +114,7 @@
       }
 
       async function loadStudents(){
+        const seq = ++loadSeq;
         try {
           const filters = {
             q: document.getElementById('f_q').value.trim(),
@@ -118,7 +122,9 @@
             class_name: document.getElementById('f_class').value,
             plan_name: document.getElementById('f_plan').value.trim()
           };
+          document.getElementById('resultCount').textContent = 'Carregando...';
           const data = await window.Api.apiPost('listStudents', { filters });
+          if (seq !== loadSeq) return;
           document.getElementById('resultCount').textContent = `${data.count} registros`;
           tbody.innerHTML = data.students.map(st => `
             <tr>
@@ -139,13 +145,44 @@
                 <div class="actions">
                   <a class="btn btn-secondary" href="student.html?student_id=${encodeURIComponent(st.student_id)}">Abrir</a>
                   ${st.whatsapp_link ? `<a class="btn btn-soft" href="${window.UI.escapeHtml(st.whatsapp_link)}" target="_blank">WhatsApp</a>` : ''}
+                  ${canEdit ? `<button class="btn btn-danger btnDeleteStudent" type="button" data-id="${window.UI.escapeHtml(st.student_id)}" data-name="${window.UI.escapeHtml(st.name)}">Excluir</button>` : ''}
                 </div>
               </td>
             </tr>
           `).join('');
+          bindDeleteButtons();
         } catch (err) {
+          if (seq !== loadSeq) return;
           window.UI.toast(err.message || String(err), 'err');
         }
+      }
+
+      function scheduleLoadStudents(){
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(loadStudents, 250);
+      }
+
+      function bindDeleteButtons(){
+        document.querySelectorAll('.btnDeleteStudent').forEach(btn => btn.addEventListener('click', async () => {
+          const id = btn.dataset.id || '';
+          const name = btn.dataset.name || 'este aluno';
+          if (!id) return;
+          const ok = confirm(`Excluir ${name} da planilha?\n\nEsta ação remove o cadastro e ele não aparecerá mais nas listas e relatórios.`);
+          if (!ok) return;
+
+          const oldText = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Excluindo...';
+          try {
+            await window.Api.apiPost('deleteStudent', { student_id: id });
+            window.UI.toast('Aluno excluído.');
+            await loadStudents();
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = oldText;
+            window.UI.toast(err.message || String(err), 'err');
+          }
+        }));
       }
 
       document.getElementById('btnReload').addEventListener('click', loadStudents);
@@ -156,7 +193,7 @@
         document.getElementById('f_plan').value = '';
         loadStudents();
       });
-      fields.forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', loadStudents));
+      fields.forEach(id => document.getElementById(id).addEventListener(id === 'f_q' ? 'input' : 'change', id === 'f_q' ? scheduleLoadStudents : loadStudents));
 
       await loadClasses();
       await loadStudents();
